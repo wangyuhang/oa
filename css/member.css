@@ -1,0 +1,14 @@
+.mui-indexed-list-bar{background-color:#fafafa;}
+.mui-table-view{padding-right:23px;}
+
+.c-tag button{display:inline-block; margin:0 10px 10px 0;}
+
+.c-base-info .c-avatar{width:60px; height:60px; border-radius:40px; overflow:hidden; float:left; margin-right:10px;}
+.c-base-info .c-avatar img{width:60px; height:60px;}
+.c-base-info .c-name{height:30px; line-height:40px; overflow:hidden;}
+.c-base-info .c-department{height:30px; line-height:30px; overflow:hidden; font-size:14px; color:#999;}
+.c-num-cell{padding:10px 0; border-bottom:1px solid #ccc;}
+.c-num-cell label{color:#007aff; }
+.c-num-cell .mui-icon{float:right; margin-left:10px;}
+.c-short-num{margin-top:10px;}
+.c-tag{margin-top:10px;}

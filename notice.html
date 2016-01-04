@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <title></title>
+    
+    <link href="css/mui.min.css" rel="stylesheet"/>
+    <link href="css/notice.css" rel="stylesheet"/>
+    
+</head>
+<body>
+<div class="mui-content">
+	<div id="pullrefresh" class="mui-content mui-scroll-wrapper">
+		<div class="mui-scroll">
+		    <ul id="noticeList" class="mui-table-view mui-table-view-striped mui-table-view-condensed">
+		        <!--<li class="mui-table-view-cell" rel='1'>
+		            <div class="mui-table">
+		                <div class="mui-table-cell mui-col-xs-10">
+		                    <h4 class="mui-ellipsis-2">dsfadf</h4>
+		                    <h5>发送人：asdfadsf</h5>
+		                </div>
+		                <div class="mui-table-cell mui-col-xs-2 mui-text-right">
+		                    <span class="mui-h5">12:30</span>
+		                </div>
+		            </div>
+		        </li>-->
+		    </ul>
+		</div>
+	</div>
+</div>	
+</body>
+</html>
+<script src="js/zepto.min.js"></script>
+<script src="js/mui.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	var index = 0,
+  		count = 10;
+  	function pulldownRefresh() {
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/receive-notice', {
+  			data:{
+				index:0,
+				count:count,
+				id:1
+			},
+			dataType:'json',
+			type:'get',
+			timeout:10000,
+			success:function(result){
+				if(result.succ) {
+					index = result.data.length;
+					var html = '';
+					mui.each(result.data, function() {
+						html += '<li class="mui-table-view-cell" rel="'+this.id+'">'+
+							            '<div class="mui-table">'+
+							                '<div class="mui-table-cell mui-col-xs-10">'+
+							                    '<h4 class="mui-ellipsis-2">'+this.title+'</h4>'+
+							                    '<h5>发送人：'+this.name+'<span class="c-reply">'+this.reply+'</span></h5>'+
+							                '</div>'+
+							                '<div class="mui-table-cell mui-col-xs-2 mui-text-right">'+
+							                    '<span class="mui-h5">'+this.time+'</span>'+
+							                '</div>'+
+							            '</div>'+
+							        '</li>'
+					});
+				}else {
+					mui.toast('获取数据失败');
+				}
+				$('#noticeList').html(html);
+				mui('#pullrefresh').pullRefresh().endPulldownToRefresh();
+			},
+			error:function(xhr,type,errorThrown){
+				mui.toast('请检查网络');
+				mui('#pullrefresh').pullRefresh().endPulldownToRefresh();						 
+			}
+  		})
+  	}
+  	
+  	function pullupRefresh() {
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/receive-notice',{
+			data:{
+				index:index,
+				count:count,
+				id:1
+			},
+			dataType:'json',
+			type:'get',
+			timeout:10000,
+			success:function(result){
+				if(result.succ) {
+					index += result.data.length;
+					if(result.data.length < count) {
+						mui.toast('到头了，别刷了！')
+					}else {
+						var html = '';
+						mui.each(result.data, function() {
+							html += ' <li class="mui-table-view-cell" rel="'+this.id+'">'+
+								            '<div class="mui-table">'+
+								                '<div class="mui-table-cell mui-col-xs-10">'+
+								                    '<h4 class="mui-ellipsis-2">'+this.title+'</h4>'+
+								                    '<h5>发送人：'+this.name+'<span class="c-reply">'+this.reply+'</span></h5>'+
+								                '</div>'+
+								                '<div class="mui-table-cell mui-col-xs-2 mui-text-right">'+
+								                    '<span class="mui-h5">'+this.time+'</span>'+
+								                '</div>'+
+								            '</div>'+
+								        '</li>'
+						});
+					}
+				}else {
+					mui.toast('获取数据失败');
+				}
+				$('#noticeList').prepend(html);
+				mui('#pullrefresh').pullRefresh().endPullupToRefresh();
+			},
+			error:function(xhr,type,errorThrown){
+				mui.toast('请检查网络');
+				mui('#pullrefresh').pullRefresh().endPullupToRefresh();				     
+			}
+		});
+  	}
+  	
+  	if (mui.os.plus) {
+		mui.plusReady(function() {
+			setTimeout(function() {
+				mui('#pullrefresh').pullRefresh().pulldownLoading();
+			}, 1000);
+		});
+	} else {
+		mui.ready(function() {
+			mui('#pullrefresh').pullRefresh().pulldownLoading();
+		});
+	}
+  	
+  	mui.init({
+		swipeBack:true,
+		gestureConfig:{
+			doubletap:true
+		},
+		pullRefresh: {
+			container: '#pullrefresh',
+			down: {
+				callback: pulldownRefresh
+			},
+			up: {
+				contentrefresh: '正在加载...',
+				callback: pullupRefresh
+			}
+		}
+	});
+  	
+  	mui('#noticeList').on('tap', 'li', function() {
+  		var webview = mui.openWindow({
+		    url: 'notice_detail.html',
+		    id: 'notice_detail.html',
+		    styles:{
+		      top: '0px',//新页面顶部位置
+		      bottom: '0px'
+		    },
+		    extras:{
+		    		noticeId: this.getAttribute('rel')
+		    },
+		    waiting:{
+		      autoShow:true,//自动显示等待框，默认为true
+		      title:'正在加载...'//等待对话框上显示的提示内容
+		    }				  
+		})
+  	})
+</script>

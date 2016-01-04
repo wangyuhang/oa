@@ -1,0 +1,23 @@
+.mui-table h4{line-height:1.5; font-size:16px; font-weight:normal;}
+.mui-content>.mui-table-view:first-child{margin-top:0;}
+
+.c-reply{color:#a2000d; margin-left:20px;}
+
+.c-notice-ctn{padding:20px;}
+.c-notice-ctn h1{font-size:23px;}
+.c-notice-ctn .c-info{margin-top:15px; font-size:14px;}
+.c-notice-ctn .c-time{float:right; color:#999;}
+.c-notice-ctn .c-file{padding-bottom:15px; margin-top:15px; border-bottom:1px solid #ccc; font-size:14px; color:#999;}
+.c-notice-ctn .c-file .c-file-item{font-size:14px; color:#007aff;}
+.c-notice-ctn .c-file .c-file-item .mui-icon{font-size:14px; margin-right:2px;}
+.c-notice-ctn .c-file label{width:15%; float:left;}
+.c-notice-ctn .c-file .c-file-list{width:85%; float:left;}
+.c-notice-ctn .c-file .c-file-list a{display:inline-block; width:48%; margin-right:2%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.c-notice-ctn .c-file .c-file-list a:nth-child(even){margin-right:0;}
+.c-notice-ctn .c-content{margin-top:15px; line-height:1.75;}
+.c-notice-ctn .c-content p{color:#333; font-size:17px;}
+
+.c-discheck-member{padding-top:10px; font-size:14px; border-top:1px solid #ccc;}
+.c-discheck-member label{float:left;}
+.c-discheck-member a{display:inline-block; margin-right:10px;}
+

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <title></title>
+    <link href="css/mui.min.css" rel="stylesheet"/>  
+    <link href="css/search.css" rel="stylesheet" />
+</head>
+<body>
+
+<div class="mui-content">
+	<div class="c-search-index-ctn">
+		<form class="mui-input-row" action="?" method="post" onsubmit="onSearch(); return false;">
+			<div class="mui-input-row mui-search">
+				<input id="search" type="search" class="mui-input-speech mui-input-clear" placeholder="检索范围：通知、通讯录、标签">
+			</div>
+		</form>
+	</div>
+</div>
+
+</body>
+</html>
+<script src="js/mui.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	mui.init();
+  	function onSearch() {
+  		alert('adaa')
+  	}
+</script>
