@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <title></title>
+    <link href="css/mui.min.css" rel="stylesheet"/>
+   
+</head>
+<body>
+<header class="mui-bar mui-bar-nav">
+	<h1 class="mui-title">宁波纽米地传媒科技有限公司</h1>
+</header>
+<div class="mui-content">
+	<form id='login-form' class="mui-input-group">
+		<div class="mui-input-row">
+			<label>账号</label>
+			<input id='account' type="text" class="mui-input-clear mui-input" placeholder="请输入账号">
+		</div>
+		<div class="mui-input-row">
+			<label>密码</label>
+			<input id='password' type="password" class="mui-input-clear mui-input" placeholder="请输入密码">
+		</div>
+	</form>
+	<form class="mui-input-group">
+		<ul class="mui-table-view mui-table-view-chevron">
+			<li class="mui-table-view-cell">
+				自动登录
+				<div id="autoLogin" class="mui-switch">
+					<div class="mui-switch-handle"></div>
+				</div>
+			</li>
+		</ul>
+	</form>
+	<div class="mui-content-padded">
+		<button id='login' class="mui-btn mui-btn-block mui-btn-primary">登录</button>
+	</div>
+	</div>
+	<div class="mui-content-padded oauth-area">
+
+	</div>
+</div>	
+</body>
+</html>
+<script src="js/zepto.min.js"></script>
+<script src="js/cookie.js"></script>
+<script src="js/mui.min.js"></script>
+ <script type="text/javascript" charset="UTF-8">
+	mui.init();
+	
+	function login() {
+		var username = $.trim($('#account').val()),
+			password = $('#password').val(),
+			autoLogin = $('#autoLogin').hasClass('mui-active')? true: false;
+		if (username != '' && password !='') {
+			if (autoLogin) {
+				localStorage.setItem('username', username);
+				localStorage.setItem('password', password);
+			} else{
+				localStorage.removeItem('username');
+				localStorage.removeItem('password');
+			}
+			
+			mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/enter',{
+				data:{
+					username: username,
+					password: password
+				},
+				dataType:'json',
+				type:'get',
+				timeout:10000,
+				success:function(result){
+					if(result.succ) {
+						mui.openWindow({
+						    url: 'index.html', 
+						    id: 'index.html',
+						    styles:{
+						    		top: '0',
+						    		bottom: '0',
+						    		popGesture:'none'
+						    }
+						});
+						$.cookie('id',result.data.id);
+						$.cookie('name',result.data.name);
+						$.cookie('avatar',result.data.avatar);
+						localStorage.setItem('id',result.data.id.toString());
+						localStorage.setItem('name',result.data.name);
+						mui.toast('登录成功');
+					}else {
+						mui.toast('登录失败');
+					}		
+				},
+				error:function(xhr,type,errorThrown){
+					console.log(errorThrown)
+					mui.toast('请检查网络');
+				}
+			});
+		}else {
+			mui.toast('请正确输入用户名和密码');
+		}
+		
+	}
+	
+  	mui.plusReady(function() {
+  		mui(document).on('tap', '#login', function() {
+			login();
+		});
+		
+		var username = localStorage.getItem('username'),
+			password = localStorage.getItem('password');
+		if (username && password) {
+			$('#account').val(username);
+			$('#password').val(password);
+			login();
+		}
+  	})
+</script>
+<script>
+
+</script>

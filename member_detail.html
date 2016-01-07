@@ -19,7 +19,7 @@
 </header>
 
 <div class="mui-content">
-	<div>
+	<div id="memberDetial">
 		<div class="c-base-info">
 			<div class="c-avatar"><img src="images/avatar.png"></div>
 			<div class="c-name">王大毛</div>
@@ -42,24 +42,7 @@
 			<a class="mui-icon mui-icon-phone" href="tel:15888024483"></a>
 		</div>
 		<div id="tagList" class="c-tag">
-			<button type="button" class="mui-btn mui-btn-success" info="from: 黄培健">adfadfa dfgd<span class="mui-badge mui-badge-danger" info="《adfadfa dfgd》 from：黄培健">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 周凯">台网互动联络员<span class="mui-badge mui-badge-danger" info="台网互动联络员 from：周凯">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 陈俊伟">宁波广电网微信编辑<span class="mui-badge mui-badge-danger" info="宁波广电网微信编辑 from：陈俊伟">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 向斌">cms相关技术<span class="mui-badge mui-badge-danger" info="cms相关技术 from：向斌">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 曹涛涛">vms相关技术<span class="mui-badge mui-badge-danger" info="vms相关技术 from：曹涛涛">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 周亚亚">APP奖品发送<span class="mui-badge mui-badge-danger" info="APP奖品发送 from：周亚亚">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 黄培健">adfadfa dfgd<span class="mui-badge mui-badge-danger" info="《adfadfa dfgd》 from：黄培健">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 周凯">台网互动联络员<span class="mui-badge mui-badge-danger" info="台网互动联络员 from：周凯">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 陈俊伟">宁波广电网微信编辑<span class="mui-badge mui-badge-danger" info="宁波广电网微信编辑 from：陈俊伟">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 向斌">cms相关技术<span class="mui-badge mui-badge-danger" info="cms相关技术 from：向斌">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 曹涛涛">vms相关技术<span class="mui-badge mui-badge-danger" info="vms相关技术 from：曹涛涛">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 周亚亚">APP奖品发送<span class="mui-badge mui-badge-danger" info="APP奖品发送 from：周亚亚">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 黄培健">adfadfa dfgd<span class="mui-badge mui-badge-danger" info="《adfadfa dfgd》 from：黄培健">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 周凯">台网互动联络员<span class="mui-badge mui-badge-danger" info="台网互动联络员 from：周凯">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 陈俊伟">宁波广电网微信编辑<span class="mui-badge mui-badge-danger" info="宁波广电网微信编辑 from：陈俊伟">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 向斌">cms相关技术<span class="mui-badge mui-badge-danger" info="cms相关技术 from：向斌">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 曹涛涛">vms相关技术<span class="mui-badge mui-badge-danger" info="vms相关技术 from：曹涛涛">x</span></button>
-			<button type="button" class="mui-btn mui-btn-success" info="from: 周亚亚">APP奖品发送<span class="mui-badge mui-badge-danger" info="APP奖品发送 from：周亚亚">x</span></button>
+			
 		</div>
 	</div>
 </div>
@@ -73,36 +56,162 @@
  <script src="js/mui.min.js"></script>
  <script type="text/javascript" charset="utf-8">
   	mui.init();
-  	mui('#tagList').on('tap', 'button', function() {
+  	
+  	//获取详细信息
+  	function getMember(mid) {
+		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-information', {
+			data: {
+				id: mid
+			},
+			dataType:'json',
+			type:'get',
+			timeout:10000,
+			success:function(result){
+				if(result.succ) {
+					var html = '',
+						tagHtml = '';
+					mui.each(result.data.tag, function() {
+						tagHtml += '<button type="button" class="mui-btn mui-btn-success" info="from：'+this.from+'">'+this.tag+
+						'<span class="mui-badge mui-badge-danger deletButtom" info="'+this.tag+' from：'+this.from+'" tid="'+this.tid+'">x</span></button>'
+					});
+					html = '<div class="c-base-info">'+
+									'<div class="c-avatar"><img src="'+result.data.avatar+'"></div>'+
+									'<div class="c-name">'+result.data.name+'</div>'+
+									'<div class="c-department">'+result.data.department+'</div>'+
+								'</div>'+
+								'<div class="c-short-num c-num-cell">'+
+									'<label>短号：</label>'+
+									'<span>'+result.data.short+'</span>'+
+									'<a class="mui-icon mui-icon-phone" href="tel:'+result.data.short+'"></a>'+
+								'</div>'+
+								'<div class="c-long-num c-num-cell">'+
+									'<label>手机号：</label>'+
+									'<span>'+result.data.cellphone+'</span>'+
+									'<a class="mui-icon mui-icon-phone" href="tel:'+result.data.cellphone+'"></a>'+
+									'<a class="mui-icon mui-icon-chatbubble" href="sms:'+result.data.cellphone+'"></a>'+
+								'</div>'+
+								'<div class="c-office-num c-num-cell">'+
+									'<label>办公室：</label>'+
+									'<span>'+result.data.office+'</span>'+
+									'<a class="mui-icon mui-icon-phone" href="tel:'+result.data.office+'"></a>'+
+								'</div>'+
+								'<div class="c-office-num c-num-cell">'+
+									'<label>邮箱：</label>'+
+									'<span>'+result.data.email+'</span>'+
+									'<a class="mui-icon mui-icon-phone" href="mailto:'+result.data.email+'"></a>'+
+								'</div>'+
+								'<div id="tagList" class="c-tag">'+tagHtml+'</div>'
+					$('#memberDetial').html(html);	
+					$('#addTag').attr({'tagToName': result.data.name, 'tagToId': mid});
+				}else {
+					mui.toast('获取数据失败');
+				}
+				waiting.close();
+			},
+			error:function(xhr,type,errorThrown){
+				mui.toast('请检查网络');	     
+				waiting.close() ;
+			}
+		});
+	}
+  	
+  	//添加标签from{name,id}, to{name, id}, content
+  	function addTag(from, to, content) {
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/add-tag', {
+			data: {
+				from: from.id,
+				to: to.id,
+				content: content
+			},
+			type: 'get',
+			dataType: 'json',
+			timeout: 10000,
+			success: function(result) {
+				if (result.succ) {
+					$('#tagList').prepend('<button type="button" class="mui-btn mui-btn-success" info="from: '+from.name+'">'+content+
+					'<span class="mui-badge mui-badge-danger deletButtom" info="'+content+' from：'+from.name+'" tid="'+result.data.tid+'">x</span></button>')
+				} else{
+					mui.toast('添加失败');
+				}
+			},
+			error: function(xhr,type,errorThrown) {
+					mui.toast('请检查网络');
+			}
+		})
+  	}
+  	
+  	//添加标签from{name,id}, to{name, id}, content
+  	function deletTag(tid, mid, tag) {
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/del-tag', {
+			data: {
+				tid: tid,
+				id: mid
+			},
+			type: 'get',
+			dataType: 'json',
+			timeout: 10000,
+			success: function(result) {
+				if (result.succ) {
+					tag.remove();
+				} else{
+					mui.toast('删除失败');
+				}
+			},
+			error: function(xhr,type,errorThrown) {
+					mui.toast('请检查网络');
+			}
+		})
+  	}
+  	
+  	mui('#memberDetial').on('tap', 'button', function() {
   		var info = this.getAttribute('info')
   		mui.toast(info);
   	})
   	
-  	mui('#tagList').on('tap', '.mui-badge', function() {
-  		var btnArray = ['是', '否'];
-  		var info = this.getAttribute('info');
-  		var thisTag = this.parentNode;
-		mui.confirm('是否删除'+info, '', btnArray, function(e) {
+  	//添加标签
+  	mui('footer').on('tap', '#addTag', function(event) {
+  		event.detail.gesture.preventDefault(); //修复iOS 8.x平台存在的bug，使用plus.nativeUI.prompt会造成输入法闪一下又没了
+  		var fromName = localStorage.getItem('name'),
+  			fromId = localStorage.getItem('id'),
+  			toId = $(this).attr('tagToId'),
+  			toName = $(this).attr('tagToName');
+		var btnArray = ['确定', '取消'];
+		mui.prompt('from '+fromName+' to '+toName, '', '', btnArray, function(e) {
 			if (e.index == 0) {
-				thisTag.remove()
+				var from = {'id': fromId, 'name': fromName},
+					to = {'id': toId, 'name': toName},
+					content = e.value;
+				if($.trim(content) != '') {
+					addTag(from, to, content);
+				}
 			} else {
 				
 			}
 		})
+  	})
+  	
+  	//删除标签
+  	mui('#memberDetial').on('tap', '.deletButtom', function(e) {
+  		var btnArray = ['是', '否'];
+  		var info = $(this).attr('info'),
+  			thisTag = $(this).parent(),
+  			tid = $(this).attr('tid');
+		mui.confirm('是否删除'+info, '', btnArray, function(e) {
+			if (e.index == 0) {
+				deletTag(tid, mid, thisTag);
+			} else {
+			}
+		})
+		e.stopPropagation();
   		return false;
   	})
   	
   	
-  	
-  	mui('footer').on('tap', '#addTag', function(event) {
-  		event.detail.gesture.preventDefault(); //修复iOS 8.x平台存在的bug，使用plus.nativeUI.prompt会造成输入法闪一下又没了
-		var btnArray = ['确定', '取消'];
-		mui.prompt('from 黄培健 to 王宇航', '', '', btnArray, function(e) {
-			if (e.index == 0) {
-				$('#tagList').prepend('<button type="button" class="mui-btn mui-btn-success" info="from: 周亚亚">'+e.value+'<span class="mui-badge mui-badge-danger" info="'+e.value+' from：周亚亚">x</span></button>')
-			} else {
-				
-			}
-		})
+  	var waiting = null;
+  	var mid = '';
+  	mui.plusReady(function(){
+  		mid = plus.webview.currentWebview().mid;
+  		waiting = plus.nativeUI.showWaiting('请等待...');
+  		getMember(mid);
   	})
 </script>
