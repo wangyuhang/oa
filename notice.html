@@ -34,41 +34,51 @@
 <script src="js/zepto.min.js"></script>
 <script src="js/mui.min.js"></script>
 <script src="js/init_db.js"></script>
+<script src="js/format_data.js"></script>
+
 <script type="text/javascript" charset="utf-8">
+	//每次请求最新数据，成功存入本地数据库之后，改变notice的sinceid
+  	function resetNoticeSinceId(id) {
+  		noticeSinceId = id;
+  		plus.storage.setItem('noticesid', noticeSinceId);
+  	}
 	
-	 
-  	var index = 0,
-  		count = 10;
   	function pulldownRefresh() {
-  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/receive-new-notice', {
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-notices', {
   			data:{
-				index:0,
-				id:1
+				since_id: noticeSinceId,
+				user_id:1
 			},
 			dataType:'json',
 			type:'get',
 			timeout:10000,
 			success:function(result){
 				if(result.succ) {
-					index = result.data.length;
-					var html = '';
-					mui.each(result.data, function() {
-						html += '<li class="mui-table-view-cell" rel="'+this.id+'">'+
-							            '<div class="mui-table">'+
-							                '<div class="mui-table-cell mui-col-xs-10">'+
-							                    '<h4 class="mui-ellipsis-2">'+this.title+'</h4>'+
-							                    '<h5>发送人：'+this.name+'<span class="c-reply">'+this.reply+'</span></h5>'+
-							                '</div>'+
-							                '<div class="mui-table-cell mui-col-xs-2 mui-text-right">'+
-							                    '<span class="mui-h5">'+this.time+'</span>'+
-							                '</div>'+
-							            '</div>'+
-							        '</li>'
-					});
+					if(result.data.length > 0) {
+						db.transaction(function (tx) {
+							mui.each(result.data, function() {
+								var insertNoticeSQL = 'insert or ignore into notice '+
+								'(id, title, content, create_time, all_users, reply_users, user_id, attachments) values'+
+								'('+this.id+', "'+this.title+'", "'+this.content+'", '+this.time+', "'+this.all_users+'", "'+this.reply_users+'", '+this.user_id+', "'+this.attachments+'")'
+								tx.executeSql(insertNoticeSQL, [], function() {})
+								mui.each(this.attachments_detail, function() {
+									var insertAttachmentSQL = 'insert or ignore into attachment '+
+											'(id, name, type, link) values'+
+											'('+this.id+', "'+this.name+'", '+this.type+', "'+this.link+'")'
+									tx.executeSql(insertAttachmentSQL, [], function(tx, result) {}, function(tx, result) {console.log('插入attachment失败'+tx)});
+								})
+							})
+						}, function() {console.log('整个事务执行失败')}, function() {
+							getNewNoticeFromDB(noticeSinceId, false)
+						})
+					}else {
+						
+					}
+				
 				}else {
 					mui.toast('获取数据失败');
 				}
-				$('#noticeList').html(html);
+				
 				mui('#pullrefresh').pullRefresh().endPulldownToRefresh();
 			},
 			error:function(xhr,type,errorThrown){
@@ -78,78 +88,84 @@
   		})
   	}
   	
-  	function pullupRefresh() {
-  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/receive-old-notice',{
-			data:{
-				index:index,
-				count:count,
-				id:1
-			},
-			dataType:'json',
-			type:'get',
-			timeout:10000,
-			success:function(result){
-				if(result.succ) {
-					index += result.data.length;
-					if(result.data.length < count) {
-						mui.toast('到头了，别刷了！')
-					}else {
-						var html = '';
-						mui.each(result.data, function() {
-							html += ' <li class="mui-table-view-cell" rel="'+this.id+'">'+
-								            '<div class="mui-table">'+
-								                '<div class="mui-table-cell mui-col-xs-10">'+
-								                    '<h4 class="mui-ellipsis-2">'+this.title+'</h4>'+
-								                    '<h5>发送人：'+this.name+'<span class="c-reply">'+this.reply+'</span></h5>'+
-								                '</div>'+
-								                '<div class="mui-table-cell mui-col-xs-2 mui-text-right">'+
-								                    '<span class="mui-h5">'+this.time+'</span>'+
-								                '</div>'+
-								            '</div>'+
-								        '</li>'
+  	
+  	//从数据库中读取新增的notice
+  	function getNewNoticeFromDB(id, isFirst) {
+  		db.transaction(function (tx) {
+  			var searchSQL = 'select notice.id as nid,* from notice join user on notice.user_id = user.id where notice.id > ? order by notice.id desc'
+  			tx.executeSql(searchSQL, [id], function(tx, result) {
+  				if (result.rows.length > 0){
+	  				resetNoticeSinceId(result.rows.item(0).nid);
+	  				var html = '';
+	  				for(var i=0; i<result.rows.length; i++) {
+	  					html += '<li id="item'+result.rows.item(i).nid+'" class="mui-table-view-cell" rel="'+result.rows.item(i).nid+'">'+
+						            '<div class="mui-table">'+
+						                '<div class="mui-table-cell mui-col-xs-10">'+
+						                    '<h4 class="mui-ellipsis-2">'+result.rows.item(i).title+'</h4>'+
+						                    '<h5>发送人：'+result.rows.item(i).name+'<span class="c-reply">'+formatReply(result.rows.item(i).reply_users,result.rows.item(i).all_users)+'</span></h5>'+
+						                '</div>'+
+						                '<div class="mui-table-cell mui-col-xs-2 mui-text-right">'+
+						                    '<span class="mui-h5">'+transformDateToSeveralType(result.rows.item(i).create_time)+'</span>'+
+						                '</div>'+
+						            '</div>'+
+						        '</li>'
+	  				}
+	  				$('#noticeList').prepend(html);
+	  			}
+  				if(isFirst){
+  					//发起请求服务器数据
+			  		if (mui.os.plus) {
+						mui.plusReady(function() {
+							setTimeout(function() {
+								mui('#pullrefresh').pullRefresh().pulldownLoading();
+							}, 1000);
+						});
+					} else {
+						mui.ready(function() {
+							mui('#pullrefresh').pullRefresh().pulldownLoading();
 						});
 					}
-				}else {
-					mui.toast('获取数据失败');
-				}
-				$('#noticeList').prepend(html);
-				mui('#pullrefresh').pullRefresh().endPullupToRefresh();
-			},
-			error:function(xhr,type,errorThrown){
-				mui.toast('请检查网络');
-				mui('#pullrefresh').pullRefresh().endPullupToRefresh();				     
-			}
-		});
+  				}
+  			}, function() {console.log('查找失败')})
+  		})
   	}
   	
-  	if (mui.os.plus) {
-		mui.plusReady(function() {
-			setTimeout(function() {
-				mui('#pullrefresh').pullRefresh().pulldownLoading();
-			}, 1000);
-		});
-	} else {
-		mui.ready(function() {
-			mui('#pullrefresh').pullRefresh().pulldownLoading();
-		});
-	}
+  	//转化已读未读数据格式
+  	function formatReply(replyUser, allUser) {
+  		var replyUserArrLength = 0;
+  		if(replyUser !='') {
+  			replyUserArrLength = replyUser.split(',').length;
+  		}
+  		var	allUserArr = allUser.split(',');
+  		
+  		return (allUserArr.length - replyUserArrLength+'/'+allUserArr.length);
+  	}
   	
-  	mui.init({
-		swipeBack:true,
-		gestureConfig:{
-			doubletap:true
-		},
-		pullRefresh: {
-			container: '#pullrefresh',
-			down: {
-				callback: pulldownRefresh
+  	var noticeSinceId = 0;
+  	mui.plusReady(function() {
+  		//从缓存中读取noticeSinceId
+  		noticeSinceId = plus.storage.getItem('noticesid');
+
+  		//从本地数据库中读取旧的数据
+  		getNewNoticeFromDB(0,true);
+  		
+  		
+  		mui.init({
+			swipeBack:true,
+			gestureConfig:{
+				doubletap:true
 			},
-			up: {
-				contentrefresh: '正在加载...',
-				callback: pullupRefresh
+			pullRefresh: {
+				container: '#pullrefresh',
+				down: {
+					callback: pulldownRefresh
+				},
+				up: {
+				}
 			}
-		}
-	});
+		});
+  	})
+  	
   	
   	mui('#noticeList').on('tap', 'li', function() {
   		var webview = mui.openWindow({

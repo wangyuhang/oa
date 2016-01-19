@@ -74,6 +74,7 @@
 		});
 	}
 	
+	
 	mui('#memberList').on('tap', '.memeberItem', function() {
 		var mid = this.getAttribute('rel');
   		var webview = mui.openWindow({
@@ -118,7 +119,7 @@
 	
 	var waiting = null;
   	mui.plusReady(function(){
-  		waiting = plus.nativeUI.showWaiting('请等待...');
+  		//waiting = plus.nativeUI.showWaiting('请等待...');
   		getMemberList();
   	})
 </script>

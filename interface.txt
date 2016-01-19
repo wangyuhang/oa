@@ -1,0 +1,162 @@
+index页面
+1、
+
+notice页面
+1、将本地数据库中的notice读出并显示
+2、从本地数据库中查询notice的sinceid，
+3、根据sinceid，向服务器端请求数据最新的notice数据，返回notice和attachment，并存入本地数据库
+
+memeber页面
+1、从本地数据库读取user
+2、从本地数据库查询user的sinceid
+3、根据sinceid，向服务器端请求数据最新的user数据，返回user，并存入本地数据库
+
+获取公告列表
+{
+	since_id//当前最后一条的id 用来判断有没有最新的
+	user_id//当前用户id
+}
+
+{
+	succ
+	data: [
+		title:
+		name//发送人
+		id//公告id
+		time//显示时间
+		all_users:
+		reply_users:
+		attachments:
+		attachments_detail:[
+			id
+			name//附件名称
+			 type//附件类型 0其他1图片2音频3视频
+			 link//附件链接
+		]
+		
+	]
+}
+
+获取通讯录
+{
+	since_id
+}
+
+{
+	succ;
+	data:{
+		new:[
+			{
+				user_id:用户id
+				sex：性别
+			    name:姓名
+			    cellphone:长号
+			    short:短号
+			    office:办公室电话
+			    email:邮箱
+			    time:最后时间
+			    status:是否离职
+			    department:arr部门id
+			    avatar:头像
+			    tag:[
+			    	  {
+			    	  		tid://标签id
+			    	  		content:标签内容
+			    	  		from:
+			    	  		status:
+			       }
+			    ]
+			}
+		]
+	}
+}
+
+标签
+{
+	user_id:
+	tid:
+}
+
+{
+	succ
+	data: {
+		new:[
+	    	  {
+	    	  		tid://标签id
+	    	  		content:标签内容
+	    	  		from:
+	    	  		status:
+	       }
+	    ]
+	    old:[
+	    		{
+	    			tid:
+	    			status:
+	    		}
+	    ]
+	}
+	
+}
+
+部门
+{
+	since_id
+}
+
+{
+	succ:
+	data:[
+		{
+			id:
+			name:
+		}
+	]
+}
+
+修改
+{
+	since_id
+}
+
+{
+	succ
+	data:{
+		type:
+		info: [
+			key:
+			value:
+		]
+	}
+}
+
+
+
+登录
+{
+	username
+	password
+}
+
+{
+	succ;
+	 data{
+	     id:id
+	     name:姓名
+	     avatar:头像
+	}
+	 msg
+}
+
+添加标签
+{
+	from
+	to
+	content
+}
+
+{
+	succ
+	data {
+		tid
+	}
+}

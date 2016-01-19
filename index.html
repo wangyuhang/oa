@@ -28,10 +28,11 @@
 
 </body>
 </html>
-
 <script src="js/mui.min.js"></script>
+<script src="js/init_db.js"></script>
 <script type="text/javascript" charset="utf-8">
-	 //mui初始化
+
+	//mui初始化
 	mui.init();
 	var subpages = ['search.html', 'notice.html', 'member.html'];
 	var subpage_style = {
@@ -41,22 +42,7 @@
 	
 	var aniShow = {};
 	
-	 //创建子页面，首个选项卡页面显示，其它均隐藏；
-	mui.plusReady(function() {
-		var self = plus.webview.currentWebview();
-		for (var i = 0; i < 3; i++) {
-			var temp = {};
-			var sub = plus.webview.create(subpages[i], subpages[i], subpage_style);
-			if (i > 0) {
-				sub.hide();
-			}else{
-				temp[subpages[i]] = "true";
-				mui.extend(aniShow,temp);
-			}
-			self.append(sub);
-		}
-	});
-	 //当前激活选项
+	//当前激活选项
 	var activeTab = subpages[0];
 	var title = document.getElementById("title");
 	 //选项卡点击事件
@@ -83,5 +69,110 @@
 		//更改当前活跃的选项卡
 		activeTab = targetTab;
 	});
+	
+	//创建子页面，首个选项卡页面显示，其它均隐藏；
+	mui.plusReady(function() {
+		var self = plus.webview.currentWebview();
+		for (var i = 0; i < 3; i++) {
+			var temp = {};
+			var sub = plus.webview.create(subpages[i], subpages[i], subpage_style);
+			if (i > 0) {
+				sub.hide();
+			}else{
+				temp[subpages[i]] = "true";
+				mui.extend(aniShow,temp);
+			}
+			self.append(sub);
+		}
+		
+		//更新sinceid
+		/*$allSId = plus.storage.getItem('allsid');
+		$noticeSId = plus.storage.getItem('noticesid');
+		$userSId = plus.storage.getItem('usersid');
+		$tagSId = plus.storage.getItem('tagsid');
+		$departmentSId = plus.storage.getItem('departmentsid');
+		
+		if ($allSId == null) {
+			plus.storage.setItem('allsid', '0');
+		}
+		alert($noticeSId)
+		if ($noticeSId == null) {
+			plus.storage.setItem('noticesid', '0');
+		}
+		if ($userSId == null) {
+			plus.storage.setItem('usersid', '0');
+		}
+		if ($tagSId == null) {
+			plus.storage.setItem('tagsid', '0');
+		}
+		if ($departmentSId == null) {
+			plus.storage.setItem('departmentsid', '0');
+		}*/
+		
+		
+		
+		var userSId = 0;
+		setTimeout(function() {
+			getUserSinceIdFromDB();
+			getUserFromSever();
+		},1000)
+		function getUserSinceIdFromDB() {
+			db.transaction(function (tx) {
+				tx.executeSql('select id from user order by id desc limit 1', [], function(tx, result) {
+					if(result.rows.length > 0) {
+						resetUserSinceId(result.rows.item(0).id);
+					}else {
+						resetUserSinceId(0);
+					}
+				}, function(tx, result) {
+					console.log('查找user数据库失败'+result)			
+				});
+			})
+		}
+		//每次请求最新数据，成功存入本地数据库之后，改变notice的sinceid
+	  	function resetUserSinceId(id) {
+	  		userSId = id;
+	  		plus.storage.setItem('noticesid', userSId);
+	  	}
+	  	
+	  	function getUserFromSever() {
+	  		console.log(userSId)
+	  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-directory', {
+	  			data:{
+					since_id: userSId
+				},
+				dataType:'json',
+				type:'get',
+				timeout:10000,
+				success:function(result){
+					if(result.succ) {
+						console.log(result.data.length)
+						db.transaction(function (tx) {
+							mui.each(result.data, function() {
+								var insertUserSQL = 'insert into user '+
+								'(id, email, department_id, name, cellphone, office, short_phone, headimgurl) values'+
+								'('+this.user_id+', "'+this.email+'", "'+this.department+'", "'+this.name+'", "'+this.cellphone+'", "'+this.office+'", "'+this.short+'", "'+this.avatar+'")'
+								console.log(insertUserSQL)
+								tx.executeSql(insertUserSQL, [], function() {
+									//getUserSinceIdFromDB()
+									console.log('插入成功')
+								})
+							})
+						}, function() {console.log('插入user的整个事务执行失败')}, function() {
+							//getNewNoticeFromDB(noticeSinceId)
+						})
+					
+					}else {
+						mui.toast('获取数据失败');
+					}
+				},
+				error:function(xhr,type,errorThrown){
+					mui.toast('请检查网络');				 
+				}
+	  		})
+	  	}
+		
+	});
+	
 	
 </script>

@@ -53,67 +53,92 @@
 </body>
 </html>
 <script src="js/zepto.min.js"></script>
- <script src="js/mui.min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/init_db.js"></script>
  <script type="text/javascript" charset="utf-8">
   	mui.init();
   	
+  	mui.plusReady(function(){
+  		memberId = plus.webview.currentWebview().memberId;
+  		getMember(memberId);
+  	})
+  	
   	//获取详细信息
   	function getMember(mid) {
-		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-information', {
-			data: {
-				id: mid
-			},
-			dataType:'json',
-			type:'get',
-			timeout:10000,
-			success:function(result){
-				if(result.succ) {
-					var html = '',
-						tagHtml = '';
-					mui.each(result.data.tag, function() {
-						tagHtml += '<button type="button" class="mui-btn mui-btn-success" info="from：'+this.from+'">'+this.tag+
-						'<span class="mui-badge mui-badge-danger deletButtom" info="'+this.tag+' from：'+this.from+'" tid="'+this.tid+'">x</span></button>'
-					});
-					html = '<div class="c-base-info">'+
-									'<div class="c-avatar"><img src="'+result.data.avatar+'"></div>'+
-									'<div class="c-name">'+result.data.name+'</div>'+
-									'<div class="c-department">'+result.data.department+'</div>'+
-								'</div>'+
-								'<div class="c-short-num c-num-cell">'+
-									'<label>短号：</label>'+
-									'<span>'+result.data.short+'</span>'+
-									'<a class="mui-icon mui-icon-phone" href="tel:'+result.data.short+'"></a>'+
-								'</div>'+
-								'<div class="c-long-num c-num-cell">'+
-									'<label>手机号：</label>'+
-									'<span>'+result.data.cellphone+'</span>'+
-									'<a class="mui-icon mui-icon-phone" href="tel:'+result.data.cellphone+'"></a>'+
-									'<a class="mui-icon mui-icon-chatbubble" href="sms:'+result.data.cellphone+'"></a>'+
-								'</div>'+
-								'<div class="c-office-num c-num-cell">'+
-									'<label>办公室：</label>'+
-									'<span>'+result.data.office+'</span>'+
-									'<a class="mui-icon mui-icon-phone" href="tel:'+result.data.office+'"></a>'+
-								'</div>'+
-								'<div class="c-office-num c-num-cell">'+
-									'<label>邮箱：</label>'+
-									'<span>'+result.data.email+'</span>'+
-									'<a class="mui-icon mui-icon-phone" href="mailto:'+result.data.email+'"></a>'+
-								'</div>'+
-								'<div id="tagList" class="c-tag">'+tagHtml+'</div>'
-					$('#memberDetial').html(html);	
-					$('#addTag').attr({'tagToName': result.data.name, 'tagToId': mid});
-				}else {
-					mui.toast('获取数据失败');
+  		db.transaction(function (tx) {
+  			var searchSQL = 'select * from user where id = ?'
+  			tx.executeSql(searchSQL, [mid], function(tx, result) {
+  				var avatar = result.rows.item(0).headimgurl,
+  					cellphone = result.rows.item(0).cellphone,
+  					office = result.rows.item(0).office,
+  					short_phone = result.rows.item(0).short_phone,
+  					email = result.rows.item(0).email;
+				
+				var cellphoneHtml = '',
+					officeHtml = '',
+					short_phoneHtml = '',
+					emailHtml = '';
+				
+				if(avatar == ''){
+					avatar = '../images/avatar.png';
 				}
-				waiting.close();
-			},
-			error:function(xhr,type,errorThrown){
-				mui.toast('请检查网络');	     
-				waiting.close() ;
-			}
-		});
-	}
+				if(cellphone != '') {
+					cellphoneHtml = '<div class="c-long-num c-num-cell">'+
+										'<label>手机号：</label>'+
+										'<span>'+cellphone+'</span>'+
+										'<a class="mui-icon mui-icon-phone" href="tel:'+cellphone+'"></a>'+
+										'<a class="mui-icon mui-icon-chatbubble" href="sms:'+cellphone+'"></a>'+
+									'</div>'
+				}
+				if(office != '') {
+					officeHtml = '<div class="c-office-num c-num-cell">'+
+									'<label>办公室：</label>'+
+									'<span>'+office+'</span>'+
+									'<a class="mui-icon mui-icon-phone" href="tel:'+office+'"></a>'+
+								'</div>'
+				}
+				if(short_phone != '') {
+					short_phoneHtml = '<div class="c-short-num c-num-cell">'+
+										'<label>短号：</label>'+
+										'<span>'+short_phone+'</span>'+
+										'<a class="mui-icon mui-icon-phone" href="tel:'+short_phone+'"></a>'+
+									'</div>'
+				}
+				if(email != '') {
+					emailHtml = '<div class="c-office-num c-num-cell">'+
+									'<label>邮箱：</label>'+
+									'<span>'+email+'</span>'+
+									'<a class="mui-icon mui-icon-phone" href="mailto:'+email+'"></a>'+
+								'</div>'
+				}
+				
+				var html = '<div class="c-base-info">'+
+									'<div class="c-avatar"><img src="'+avatar+'"></div>'+
+									'<div class="c-name">'+result.rows.item(0).name+'</div>'+
+									'<div class="c-department">'+result.rows.item(0).department_id+'</div>'+
+								'</div>'+cellphoneHtml+officeHtml+short_phoneHtml+emailHtml+
+								'<div id="tagList" class="c-tag">'+tagHtml+'</div>'
+				$('#memberDetial').html(html);
+				
+				//输出标签
+				var searchTagSQL = 'select * from tag where to_user = ?';
+				var tagHtml = '';
+				tx.executeSql(searchTagSQL, [result.rows.item(0).id], function(tx, result) {
+					for(var i=0; i<result.rows.length; i++) {
+						tagHtml += '<button type="button" class="mui-btn mui-btn-success" info="from：'+result.rows.item(i).from_user+'">'+result.rows.item(i).content+
+						'<span class="mui-badge mui-badge-danger deletButtom" info="'+result.rows.item(i).content+' from：'+result.rows.item(i).from_user+'" tid="'+result.rows.item(i).id+'">x</span></button>'
+					}
+					$('#tagList').html(tagHtml);
+				}, function() {
+					console.log('查找失败')
+				})
+
+
+				
+  			}, function() {console.log('查找失败')})
+  		}, function(){console.log('整个事务失败')},function(){})
+  	}
+		
   	
   	//添加标签from{name,id}, to{name, id}, content
   	function addTag(from, to, content) {
@@ -207,11 +232,5 @@
   	})
   	
   	
-  	var waiting = null;
-  	var mid = '';
-  	mui.plusReady(function(){
-  		mid = plus.webview.currentWebview().mid;
-  		waiting = plus.nativeUI.showWaiting('请等待...');
-  		getMember(mid);
-  	})
+
 </script>

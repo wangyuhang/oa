@@ -10,7 +10,7 @@
 	"icons": {
 		"72": "icon.png"
 	},
-	"launch_path": "login.html",/*应用的入口页面，默认为根目录下的index.html；支持网络地址，必须以http://或https://开头*/
+	"launch_path": "index.html",/*应用的入口页面，默认为根目录下的index.html；支持网络地址，必须以http://或https://开头*/
 	"developer": {
 		"name": "",/*开发者名称*/
 		"email": "",/*开发者邮箱地址*/
@@ -189,7 +189,7 @@
 					"xhdpi": "", /*720P高分屏启动图片，分辨率：720x1242*/
 					"xxhdpi": ""
 				}
-			}
+			},"debug":true
 		}
 	},
 	"dependencies": {
@@ -201,14 +201,20 @@
 					"js/mui.min.js",
 					"fonts/mui.ttf",
 					"css/mui.min.css",
-					"search.html"
+					"search.html",
+					"js/init_db.js"
 				],
 				"refer": [],
 				"priority": 0
 			},
 			"notice.html": {
 				"resources": [
-					"css/notice.css"
+					"css/notice.css",
+					"js/init_db.js",
+					"js/format_data.js",
+					"js/mui.min.js",
+					"js/zepto.min.js",
+					"css/mui.min.css"
 				],
 				"refer": [
 					"notice_detail.html"
@@ -222,7 +228,8 @@
 					"js/mui.indexedlist.js",
 					"js/mui.min.js",
 					"fonts/mui.ttf",
-					"css/mui.min.css"
+					"css/mui.min.css",
+					"js/zepto.min.js"
 				],
 				"refer": [
 					"member_detail.html"
@@ -254,7 +261,9 @@
 					"js/mui.min.js",
 					"css/notice.css",
 					"fonts/mui.ttf",
-					"css/mui.min.css"
+					"css/mui.min.css",
+					"css/comm.css",
+					"js/zepto.min.js"
 				],
 				"refer": [],
 				"priority": 0

@@ -17,41 +17,28 @@
 	<h1 class="mui-title">详情</h1>
 </header>
 <div class="mui-content">
-	<div id="noticeCtn" class="c-notice-ctn">
-		<!--<h1>互联网大会通知</h1>
+	<div class="c-notice-ctn">
+		<h1 id="titleCtn"></h1>
 		<div class="c-info">
-			<span class="c-name">发送人：温艳艳</span>
-			<span class="c-time">2015.02.02</span>
+			<span id="nameCtn" class="c-name"></span>
+			<span id="timeCtn" class="c-time">2015.02.02</span>
 		</div>
 		<div class="c-file">
 			<label>附件：</label>
-			<div class="c-file-list">
-				<a class="c-file-item"><i class="mui-icon mui-icon-image"></i>飞撒旦发生的.jpg</a>
-				<a class="c-file-item"><i class="mui-icon mui-icon-videocam"></i>飞撒旦发生的.jpg</a>
-				<a class="c-file-item"><i class="mui-icon mui-icon-paperclip"></i>飞撒旦发生的.jpg</a>	
+			<div id="fileCtn" class="c-file-list">
 			</div>
 			<div class="mui-clearfix"></div>
 		</div>
-		<div class="c-content">
-			<p>阿打发打发士大夫打发打发asd飞 asd飞撒旦发生的</p>
-			<p>阿打发打发士大夫打发打发asd飞 asd飞撒旦发生的</p>
-			<p>阿打发打发士大夫打发打发asd飞 asd飞撒旦发生的</p>
-			<p>阿打发打发士大夫打发打发asd飞 asd飞撒旦发生的</p>
-			<p>阿打发打发士大夫打发打发asd飞 asd飞撒旦发生的</p>
-			<p>阿打发打发士大夫打发打发asd飞 asd飞撒旦发生的</p>
-			<p>阿打发打发士大夫打发打发asd飞 asd飞撒旦发生的</p>
-			<p>阿打发打发士大夫打发打发asd飞 asd飞撒旦发生的</p>
+		<div id="contentCtn" class="c-content">
+			
 		</div>
 		
 		<div class="c-discheck-member">
-			<label>未确认（12/36）：</label>
-			<a href="tel:15888024483">向斌</a>
-			<a href="tel:15888024483">会晕</a>
-			<a href="tel:15888024483">王宇航</a>
-			<a href="tel:15888024483">刘龙龙</a>
-			<a href="tel:15888024483">小李</a>
+			<label>未确认<span id="replayCtn"></span>：</label>
+			<span id="unreplyCtn">
+			</span>
 			<div class="mui-clearfix"></div>
-		</div>-->
+		</div>
 	</div>
 
 </div>
@@ -63,60 +50,106 @@
 </html>
 <script src="js/zepto.min.js"></script>
 <script src="js/mui.min.js"></script>
+<script src="js/init_db.js"></script>
+<script src="js/format_data.js"></script>
+<script src="js/arr.js"></script>
 <script type="text/javascript" charset="utf-8">
   	mui.init();
   	var noticeId = '';
   	var fileType = ['mui-icon-paperclip', 'mui-icon-image', 'mui-icon-mic', 'mui-icon-videocam'];
-  	var waiting = null;
   	mui.plusReady(function(){
   		noticeId = plus.webview.currentWebview().noticeId;
-  		waiting = plus.nativeUI.showWaiting('请等待...');
   		getNotice(noticeId);
   	})
   	
-  	function getNotice() {
-  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-notices',{
-			data:{
-				id:noticeId
-			},
-			dataType:'json',
-			type:'get',
-			timeout:10000,
-			success:function(result){
-				if(result.succ) {
-					var fileHtml = '',
-						replyHtml = '';
-					mui.each(result.attachments, function() {
-						fileHtml += '<a class="c-file-item" href='+this.link+'><i class="mui-icon '+fileType[this.type]+' "></i>'+this.name+'</a>'
-					})
-					mui.each(result.unreply, function() {
-						replyHtml += '<a href="javascript:;" rel="'+this.id+'">'+this.name+'</a>';
-					})
-					$('#noticeCtn').html('<h1>'+result.data.title+'</h1>'+
-						'<div class="c-info">'+
-							'<span class="c-name">发送人：温艳艳</span>'+
-							'<span class="c-time">'+result.data.create_time+'</span>'+
-						'</div>'+
-						'<div class="c-file">'+
-							'<label>附件：</label>'+
-							'<div class="c-file-list">'+fileHtml+'</div>'+
-							'<div class="mui-clearfix"></div>'+
-						'</div>'+
-						'<div class="c-content">'+result.data.content+'</div>'+
-						'<div class="c-discheck-member">'+
-							'<label>未确认'+result.data.reply+'：</label>'+replyHtml+
-							'<div class="mui-clearfix"></div>'+
-						'</div>')
-				}else {
-					mui.toast('获取数据失败');
-				}
-				waiting.close();
-				
-			},
-			error:function(xhr,type,errorThrown){
-				mui.toast('请检查网络');	     
-				waiting.close() ;
-			}
-		});
+  	//转化已读未读数据格式
+  	function formatReply(replyUser, allUser) {
+  		var replyUserArrLength = 0;
+  		if(replyUser !='') {
+  			replyUserArrLength = replyUser.split(',').length;
+  		}
+  		var	allUserArr = allUser.split(',');
+  		return (allUserArr.length - replyUserArrLength+'/'+allUserArr.length);
   	}
+  	
+  	//获取未读人数的数组
+  	function getUnreply(replyUser, allUser) {
+  		var	allUserArr = allUser.split(',');
+  		if(replyUser !='') {
+  			var replyUserArr = replyUser.split(',');
+  			return Array.minus(Array.union(allUserArr, replyUserArr),Array.intersect(allUserArr, replyUserArr));
+  		}else {
+  			return allUserArr;	
+  		}
+  	}
+  	
+  	function getNotice() {
+  		db.transaction(function (tx) {
+  			var searchSQL = 'select * from notice where id = '+noticeId
+  			tx.executeSql(searchSQL, [], function(tx, result) {
+  				//输出file
+  				if(result.rows.item(0).attachments != ''){
+					var fileArr = result.rows.item(0).attachments.split(','),
+						fileHtml = '',
+						searchFileSQL = 'select * from attachment where id = ?'
+					mui.each(fileArr, function() {
+						tx.executeSql(searchFileSQL, [this], function(tx, result) {
+							fileHtml = '<a class="c-file-item" href='+result.rows.item(0).link+'><i class="mui-icon '+result.rows.item(0)[this.type]+' "></i>'+result.rows.item(0).name+'</a>'
+							$('#fileCtn').append(fileHtml)
+							console.log(fileHtml);
+						}, function() {
+							console.log('查找失败')
+						})
+					})
+				}
+				
+				//输出发件人
+				var searchSenderSQL = 'select * from user where id = ?';
+				tx.executeSql(searchSenderSQL, [result.rows.item(0).user_id], function(tx, result) {
+					$('#nameCtn').html(result.rows.item(0).name);
+				}, function() {
+					console.log('查找发件人失败')
+				})
+				
+				//输出未收到通知人
+				var unReplyArr = getUnreply(result.rows.item(0).reply_users,result.rows.item(0).all_users);
+				console.log(unReplyArr)
+				if(unReplyArr.length > 0) {	
+					var searchUnReplySQL = 'select * from user where id = ?';
+					mui.each(unReplyArr, function() {
+						tx.executeSql(searchUnReplySQL, [this], function(tx, result) {
+							var unreplyHtml = '<a href="javascript:;" rel="'+result.rows.item(0).id+'">'+result.rows.item(0).name+'</a>'
+							$('#unreplyCtn').append(unreplyHtml)
+						}, function() {
+							console.log('查找失败')
+						})
+					})
+				}
+				
+				$('#replayCtn').html(formatReply(result.rows.item(0).reply_users,result.rows.item(0).all_users));
+				$('#titleCtn').html(result.rows.item(0).title);
+				$('#timeCtn').html(transformDateToFullDate(result.rows.item(0).create_time));
+				$('#contentCtn').html(result.rows.item(0).content);
+  			}, function() {console.log('查找失败')})
+  		}, function(){console.log('整个事务失败')},function(){})
+  	}
+  	
+  	mui('#unreplyCtn').on('tap', 'a', function() {
+  		var webview = mui.openWindow({
+		    url: 'member_detail.html',
+		    id: 'member_detail.html',
+		    styles:{
+		      top: '0px',//新页面顶部位置
+		      bottom: '0px'
+		    },
+		    extras:{
+		    		memberId: this.getAttribute('rel')
+		    },
+		    waiting:{
+		      autoShow:true,//自动显示等待框，默认为true
+		      title:'正在加载...'//等待对话框上显示的提示内容
+		    }				  
+		})
+  	})
+  	
 </script>
