@@ -43,8 +43,8 @@
 
 </div>
 <div style="height:61px;"></div>
-<footer class="c-footer-botton">
-	<button type="button" class="mui-btn mui-btn-success mui-btn-block">已收到</button>
+<footer id="footer" class="c-footer-botton">
+	<button id="markReaded" type="button" class="mui-btn mui-btn-success mui-btn-block">已收到</button>
 </footer>
 </body>
 </html>
@@ -81,6 +81,13 @@
   		}else {
   			return allUserArr;	
   		}
+  	}
+  	
+  	//检查自己是否已读
+  	function checkedIfReaded(id, readedIdString) {
+		if(readedIdString.indexOf(id) > 0 ){
+		    $('#footer').remove();
+		}
   	}
   	
   	function getNotice() {
@@ -125,7 +132,7 @@
 						})
 					})
 				}
-				
+				checkedIfReaded('1',result.rows.item(0).reply_users);
 				$('#replayCtn').html(formatReply(result.rows.item(0).reply_users,result.rows.item(0).all_users));
 				$('#titleCtn').html(result.rows.item(0).title);
 				$('#timeCtn').html(transformDateToFullDate(result.rows.item(0).create_time));
@@ -133,6 +140,28 @@
   			}, function() {console.log('查找失败')})
   		}, function(){console.log('整个事务失败')},function(){})
   	}
+  	
+  	mui(document).on('tap', '#markReaded', function() {
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/reply', {
+  			data:{
+				noticeId: noticeId,
+				userId:1
+			},
+			dataType:'json',
+			type:'get',
+			timeout:10000,
+			success:function(result){
+				if(result.succ) {
+					$('#footer').remove();
+				}else {
+					mui.toast('阅读状态提交失败');
+				}
+			},
+			error:function(xhr,type,errorThrown){
+				mui.toast('请检查网络');				 
+			}
+  		})
+  	})
   	
   	mui('#unreplyCtn').on('tap', 'a', function() {
   		var webview = mui.openWindow({

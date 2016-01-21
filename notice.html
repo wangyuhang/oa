@@ -40,7 +40,7 @@
 	//每次请求最新数据，成功存入本地数据库之后，改变notice的sinceid
   	function resetNoticeSinceId(id) {
   		noticeSinceId = id;
-  		plus.storage.setItem('noticesid', noticeSinceId);
+  		plus.storage.setItem('noticesid', noticeSinceId.toString());
   	}
 	
   	function pulldownRefresh() {
@@ -68,13 +68,14 @@
 									tx.executeSql(insertAttachmentSQL, [], function(tx, result) {}, function(tx, result) {console.log('插入attachment失败'+tx)});
 								})
 							})
-						}, function() {console.log('整个事务执行失败')}, function() {
-							getNewNoticeFromDB(noticeSinceId, false)
+						}, function() {console.log('插入notice事务执行失败')}, function() {
+							console.log(noticeSinceId)
+							getNewNoticeFromDB(noticeSinceId, false);
 						})
 					}else {
 						
 					}
-				
+					getModifyDate();
 				}else {
 					mui.toast('获取数据失败');
 				}
@@ -126,7 +127,7 @@
 						});
 					}
   				}
-  			}, function() {console.log('查找失败')})
+  			}, function() {console.log('查找notice失败')})
   		})
   	}
   	
@@ -141,10 +142,55 @@
   		return (allUserArr.length - replyUserArrLength+'/'+allUserArr.length);
   	}
   	
+  	//获取修改的信息
+  	function getModifyDate() {
+  		var modifySinceId = plus.storage.getItem('modifySinceId');
+  		console.log('modifyId'+modifySinceId)
+  		modifySinceId = modifySinceId == null? 0:modifySinceId;
+		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-updates', {
+  			data:{
+				since_id: modifySinceId
+			},
+			dataType:'json',
+			type:'get',
+			timeout:10000,
+			success:function(result){
+				if(result.succ) {
+					if(result.data != '') {
+						plus.storage.setItem('modifySinceId',result.data[0].sinceId.toString());
+						db.transaction(function (tx) {
+							mui.each(result.data, function() {
+								var updateSQL = '';
+								if(this.info == 'delete'){
+									console.log('delete from '+this.type+' where id = '+this.modifyId)
+									updateSQL = 'update or ignore '+this.type+' set '+this.info+' where id = '+this.modifyId;	
+								}else {
+									console.log('update or ignore '+this.type+' set '+this.info+' where id = '+this.modifyId)
+									var updateSQL = 'update or ignore '+this.type+' set '+this.info+' where id = '+this.modifyId;	
+								}
+								tx.executeSql(updateSQL, [], function() {})
+							})
+						}, function() {console.log('获取修改数据事务执行失败')}, function() {
+							getNewNoticeFromDB(noticeSinceId, false)
+						})
+					}else {
+						
+					}
+				
+				}else {
+					mui.toast('获取数据失败');
+				}
+			},
+			error:function(xhr,type,errorThrown){
+				mui.toast('请检查网络');					 
+			}
+  		})
+  	}
+  	
   	var noticeSinceId = 0;
   	mui.plusReady(function() {
   		//从缓存中读取noticeSinceId
-  		noticeSinceId = plus.storage.getItem('noticesid');
+		noticeSinceId = plus.storage.getItem('noticesid') == null? 0:noticeSinceId;
 
   		//从本地数据库中读取旧的数据
   		getNewNoticeFromDB(0,true);

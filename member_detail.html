@@ -79,6 +79,8 @@
 					short_phoneHtml = '',
 					emailHtml = '';
 				
+				$('#addTag').attr({'tagToId':memberId, 'tagToName':result.rows.item(0).name})
+				
 				if(avatar == ''){
 					avatar = '../images/avatar.png';
 				}
@@ -108,7 +110,7 @@
 					emailHtml = '<div class="c-office-num c-num-cell">'+
 									'<label>邮箱：</label>'+
 									'<span>'+email+'</span>'+
-									'<a class="mui-icon mui-icon-phone" href="mailto:'+email+'"></a>'+
+									'<a class="mui-icon mui-icon-email" href="mailto:'+email+'"></a>'+
 								'</div>'
 				}
 				
@@ -125,17 +127,16 @@
 				var tagHtml = '';
 				tx.executeSql(searchTagSQL, [result.rows.item(0).id], function(tx, result) {
 					for(var i=0; i<result.rows.length; i++) {
-						tagHtml += '<button type="button" class="mui-btn mui-btn-success" info="from：'+result.rows.item(i).from_user+'">'+result.rows.item(i).content+
-						'<span class="mui-badge mui-badge-danger deletButtom" info="'+result.rows.item(i).content+' from：'+result.rows.item(i).from_user+'" tid="'+result.rows.item(i).id+'">x</span></button>'
+						if(result.rows.item(i).status == 1){
+							tagHtml += '<button type="button" class="mui-btn mui-btn-success" info="from：'+result.rows.item(i).from_user+'">'+result.rows.item(i).content+
+							'<span class="mui-badge mui-badge-danger deletButtom" info="'+result.rows.item(i).content+' from：'+result.rows.item(i).from_user+'" tid="'+result.rows.item(i).id+'">x</span></button>'
+						}
 					}
 					$('#tagList').html(tagHtml);
 				}, function() {
-					console.log('查找失败')
+					console.log('查找Tag失败')
 				})
-
-
-				
-  			}, function() {console.log('查找失败')})
+  			}, function() {console.log('查找user_detail失败')})
   		}, function(){console.log('整个事务失败')},function(){})
   	}
 		
@@ -203,7 +204,7 @@
 		var btnArray = ['确定', '取消'];
 		mui.prompt('from '+fromName+' to '+toName, '', '', btnArray, function(e) {
 			if (e.index == 0) {
-				var from = {'id': fromId, 'name': fromName},
+				var from = {'id': 0, 'name': 'demo1'},
 					to = {'id': toId, 'name': toName},
 					content = e.value;
 				if($.trim(content) != '') {
@@ -223,7 +224,7 @@
   			tid = $(this).attr('tid');
 		mui.confirm('是否删除'+info, '', btnArray, function(e) {
 			if (e.index == 0) {
-				deletTag(tid, mid, thisTag);
+				deletTag(tid, memberId, thisTag);
 			} else {
 			}
 		})

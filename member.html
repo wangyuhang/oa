@@ -10,26 +10,35 @@
     <style>
 		html,body,.mui-content{
 			height: 100%;
-			overflow: hidden;
 		}
 		.mui-bar {
 			-webkit-box-shadow: none;
 			box-shadow: none;
 		}
+		.title{
+				margin: 7px 15px 7px;
+				color: #6d6d72;
+				font-size: 15px;
+			}
 	</style>
     
 </head>
 <body>
 <div class="mui-content">
-	<div id='list' class="mui-indexed-list">
+	<div>
 		<div class="mui-indexed-list-search mui-input-row mui-search">
 			<input type="search" class="mui-input-clear mui-indexed-list-search-input" placeholder="搜索">
 		</div>
-		<div class="mui-indexed-list-alert"></div>
-		<div class="mui-indexed-list-inner">
-			<div class="mui-indexed-list-empty-alert">没有数据</div>
-			<ul id="memberList" class="mui-table-view">				
+		<div id="memberList">
+			<div class="title">
+				右侧无导航箭头
+			</div>
+			<ul class="mui-table-view">
+				 <li class="mui-table-view-cell">Item 1</li>
+		         <li class="mui-table-view-cell">Item 2</li>
+		         <li class="mui-table-view-cell">Item 3</li>
 			</ul>
+			
 		</div>
 	</div>
 </div>
@@ -37,43 +46,180 @@
 </html>
 <script src="js/zepto.min.js"></script>
 <script src="js/mui.min.js"></script>
-<script src="js/mui.indexedlist.js"></script>
+<script src="js/init_db.js"></script>
 <script type="text/javascript" charset="utf-8">
 	mui.init();
 	
-	function getMemberList() {
-		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-directory ',{
+	//每次请求最新数据，成功存入本地数据库之后，改变user的sinceid
+  	function resetUserSinceId(id) {
+  		userSId = id;
+  		plus.storage.setItem('usersid', userSId.toString());
+  	}
+  	
+  	//从服务器上更新最新的通讯录信息
+  	function getUserFromSever() {
+  		console.log('userSID:'+userSId)
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-directory', {
+  			data:{
+				since_id: userSId
+			},
 			dataType:'json',
 			type:'get',
 			timeout:10000,
 			success:function(result){
 				if(result.succ) {
-					var departmentHtml = '';
-					mui.each(result.data, function() {
-						var memberHtml = '';
-						mui.each(this.member, function() {
-							memberHtml += '<li first="'+this.first+'" class="mui-table-view-cell mui-indexed-list-item memeberItem" rel="'+this.id+'">'+
-															'<div class="mui-slider-right mui-disabled">'+
-																'<a class="addTag mui-btn mui-btn-green" rel="'+this.id+'">贴标签</a>'+
-															'</div>'+
-															'<div class="mui-slider-handle">'+this.user+'</div>'+
-														'</li>'
+					console.log('请求user表返回数据长度：'+result.data.length)
+					if(result.data.length > 0) {
+						resetUserSinceId(result.data[0].user_id)
+						db.transaction(function (tx) {
+							mui.each(result.data, function() {
+								var insertUserSQL = 'insert or ignore into user '+
+								'(id, email, department_id, name, cellphone, office, short_phone, headimgurl) values'+
+								'('+this.user_id+', "'+this.email+'", "'+this.department+'", "'+this.name+'", "'+this.cellphone+'", "'+this.office+'", "'+this.short+'", "'+this.avatar+'")'
+								console.log(insertUserSQL)
+								tx.executeSql(insertUserSQL, [], function() {
+									//getUserSinceIdFromDB()
+								})
+							})
+						}, function() {console.log('插入user的整个事务执行失败')}, function() {
+							//getNewNoticeFromDB(noticeSinceId)
 						})
-						departmentHtml += ('<li class="mui-table-view-divider mui-indexed-list-group">'+this.name+'</li>'+memberHtml);
-					})
-					$('#memberList').html(departmentHtml);	
+					}
 				}else {
 					mui.toast('获取数据失败');
 				}
-				waiting.close();
 			},
 			error:function(xhr,type,errorThrown){
-				mui.toast('请检查网络');
-				waiting.close() ;
+				mui.toast('请检查网络');				 
 			}
-		});
+  		})
+  	}
+  	
+  	//每次请求最新数据，成功存入本地数据库之后，改变department的sinceid
+  	function resetDepartmentSinceId(id) {
+  		departmentSId = id;
+  		plus.storage.setItem('departmentsid', departmentSId.toString());
+  	}
+  	
+  	//从服务器上更新最新的部门信息
+  	function getDepartmentFromSever() {
+  		console.log('departmentSid:'+departmentSId)
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-departments', {
+  			data:{
+				since_id:departmentSId
+			},
+			dataType:'json',
+			type:'get',
+			timeout:10000,
+			success:function(result){
+				if(result.succ) {
+					console.log('最新部门数量：'+result.data.length)
+					if (result.data.length > 0) {
+						resetDepartmentSinceId(result.data[0].id);
+						db.transaction(function (tx) {
+							mui.each(result.data, function() {
+								var insertDepartmentSQL = 'insert or ignore into department '+
+								'(id, name) values'+
+								'('+this.id+', "'+this.name+'")';
+								console.log(insertDepartmentSQL);
+								tx.executeSql(insertDepartmentSQL, [], function() {
+									console.log('插入部门成功')
+								})
+							})
+						}, function() {console.log('插入department的整个事务执行失败')}, function() {
+						})
+					}	
+				}else {
+					mui.toast('获取数据失败');
+				}
+			},
+			error:function(xhr,type,errorThrown){
+				mui.toast('请检查网络');				 
+			}
+  		})
+  	}
+  	
+  	//每次请求最新数据，成功存入本地数据库之后，改变tag的sinceid
+  	function resetTagSinceId(id) {
+  		tagSId = id;
+  		plus.storage.setItem('tagsid', tagSId.toString());
+  	}
+  	
+  	//从服务器上更新最新的tag
+  	function getTagFromSever() {
+  		console.log('tagSid:'+tagSId)
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-tags', {
+  			data:{
+				since_id:tagSId
+			},
+			dataType:'json',
+			type:'get',
+			timeout:10000,
+			success:function(result){
+				if(result.succ) {
+					console.log('最新Tags数量：'+result.data.length)
+					if (result.data.length > 0) {
+						resetTagSinceId(result.data[0].tid);
+						db.transaction(function (tx) {
+							mui.each(result.data, function() {
+								var insertTagSQL = 'insert or ignore into tag '+
+								'(id, content, to_user, from_user, status) values'+
+								'('+this.tid+', "'+this.content+'", '+this.to+', '+this.from+','+this.status+')'
+								tx.executeSql(insertTagSQL, [], function() {
+									console.log('插入Tag成功')
+								})
+							})
+						}, function() {console.log('插入tag的整个事务执行失败')}, function() {
+						})
+					}	
+				}else {
+					mui.toast('获取数据失败');
+				}
+			},
+			error:function(xhr,type,errorThrown){
+				mui.toast('请检查网络');				 
+			}
+  		})
+  	}
+	
+	//从本地数据库读取部门，通过部门获取人员
+	function getUserFromDBByDepartment() {
+		db.transaction(function (tx) {
+  			var searchSQL = 'select * from department';
+  			tx.executeSql(searchSQL, [], function(tx, result) {
+  				if (result.rows.length > 0){
+	  				var html = '';
+	  				for(var i=0; i<result.rows.length; i++) {
+	  					html += '<div class="title">'+result.rows.item(i).name+'</div><ul id="department'+result.rows.item(i).id+'" class="mui-table-view"></ul>';
+	  					var searchUserSQL = 'select * from user where department_id ='+result.rows.item(i).id;
+	  					tx.executeSql(searchUserSQL, [], function(tx, result) {
+			  				if (result.rows.length > 0){
+				  				var html = '';
+				  				for(var i=0; i<result.rows.length; i++) {
+				  					html = '<li class="mui-table-view-cell memeberItem" rel="'+result.rows.item(i).id+'">'+
+												'<div class="mui-slider-right mui-disabled">'+
+													'<a class="addTag mui-btn mui-btn-green" rel="'+result.rows.item(i).id+'">贴标签</a>'+
+												'</div>'+
+												'<div>'+result.rows.item(i).name+'</div>'+
+											'</li>';
+				  					$('#department'+result.rows.item(i).department_id).append(html);
+				  				}
+				  			}	
+			  			}, function() {console.log('查找user失败')})
+	  				}
+	  				$('#memberList').html(html);
+	  			}
+  			}, function() {console.log('查找department失败')})
+  		})
 	}
 	
+	//首页有个reflash按钮，点击首页按钮触发该事件
+	function reflashUserAndDepartment() {
+		getUserFromSever();
+  		getDepartmentFromSever();
+  		getTagFromSever();
+  		getUserFromDBByDepartment();	
+	}
 	
 	mui('#memberList').on('tap', '.memeberItem', function() {
 		var mid = this.getAttribute('rel');
@@ -85,7 +231,7 @@
 		      bottom: '0px'
 		    },
 		    extras:{
-		    		mid: mid
+		    		memberId: mid
 		    },
 		    waiting:{
 		      autoShow:true,//自动显示等待框，默认为true
@@ -109,17 +255,22 @@
 		})
   	})
 	
-	mui.ready(function() {
-		var list = document.getElementById('list');
-		//calc hieght
-		list.style.height = (document.body.offsetHeight) + 'px';
-		//create
-		window.indexedList = new mui.IndexedList(list);
-	});
-	
-	var waiting = null;
+	var userSId = 0,
+		departmentSId = 0,
+		tagSId = 0;
   	mui.plusReady(function(){
-  		//waiting = plus.nativeUI.showWaiting('请等待...');
-  		getMemberList();
+  		
+  		//初始化userSid和departmentSid
+  		userSId = plus.storage.getItem('usersid') == null? 0:userSId;
+  		departmentSId = plus.storage.getItem('departmentsid') == null? 0:departmentSId;
+  		tagSId = plus.storage.getItem('tagsid') == null? 0:tagSId;
+  		
+		getUserFromSever();
+  		getDepartmentFromSever();
+  		getTagFromSever();
+  		getUserFromDBByDepartment();
+  		
+  		window.addEventListener('reflashUserAndDepartment', reflashUserAndDepartment);
+  		
   	})
 </script>
