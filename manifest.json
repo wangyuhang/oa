@@ -202,7 +202,8 @@
 					"fonts/mui.ttf",
 					"css/mui.min.css",
 					"search.html",
-					"js/init_db.js"
+					"js/init_db.js",
+					"js/zepto.min.js"
 				],
 				"refer": [],
 				"priority": 0
@@ -238,9 +239,13 @@
 			},
 			"search.html": {
 				"resources": [
-					"css/search.css"
+					"css/search.css",
+					"js/format_data.js"
 				],
-				"refer": [],
+				"refer": [
+					"member_detail.html",
+					"notice_detail.html"
+				],
 				"priority": 0
 			},
 			"member_detail.html": {
@@ -251,7 +256,8 @@
 					"css/mui.min.css",
 					"css/member.css",
 					"js/zepto.min.js",
-					"css/comm.css"
+					"css/comm.css",
+					"js/init_db.js"
 				],
 				"refer": [],
 				"priority": 0
@@ -263,7 +269,10 @@
 					"fonts/mui.ttf",
 					"css/mui.min.css",
 					"css/comm.css",
-					"js/zepto.min.js"
+					"js/zepto.min.js",
+					"js/arr.js",
+					"js/format_data.js",
+					"js/init_db.js"
 				],
 				"refer": [],
 				"priority": 0

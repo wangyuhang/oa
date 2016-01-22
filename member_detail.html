@@ -22,24 +22,29 @@
 	<div id="memberDetial">
 		<div class="c-base-info">
 			<div class="c-avatar"><img src="images/avatar.png"></div>
-			<div class="c-name">王大毛</div>
-			<div class="c-department">产品技术部（设计师）</div>
-		</div>
-		<div class="c-short-num c-num-cell">
-			<label>短号：</label>
-			<span>668899</span>
-			<a class="mui-icon mui-icon-phone" href="tel:15888024483"></a>
+			<div class="c-name"></div>
+			<div class="c-department"></div>
 		</div>
 		<div class="c-long-num c-num-cell">
 			<label>手机号：</label>
-			<span>15888024475</span>
-			<a class="mui-icon mui-icon-phone" href="tel:15888024483"></a>
-			<a class="mui-icon mui-icon-chatbubble" href="sms:10086"></a>
+			<span></span>
+			<a class="mui-icon mui-icon-phone"></a>
+			<a class="mui-icon mui-icon-chatbubble"></a>
 		</div>
 		<div class="c-office-num c-num-cell">
 			<label>办公室：</label>
-			<span>65714746</span>
-			<a class="mui-icon mui-icon-phone" href="tel:15888024483"></a>
+			<span></span>
+			<a class="mui-icon mui-icon-phone"></a>
+		</div>
+		<div class="c-short-num c-num-cell">
+			<label>短号：</label>
+			<span></span>
+			<a class="mui-icon mui-icon-phone"></a>
+		</div>
+		<div class="c-short-num c-num-cell">
+			<label>邮箱：</label>
+			<span></span>
+			<a class="mui-icon mui-icon-email"></a>
 		</div>
 		<div id="tagList" class="c-tag">
 			
@@ -55,13 +60,51 @@
 <script src="js/zepto.min.js"></script>
 <script src="js/mui.min.js"></script>
 <script src="js/init_db.js"></script>
+<script src="js/get_modify.js"></script>
  <script type="text/javascript" charset="utf-8">
   	mui.init();
   	
   	mui.plusReady(function(){
   		memberId = plus.webview.currentWebview().memberId;
-  		getMember(memberId);
+  		getUserFromSever();
   	})
+  	
+  	//从服务器上更新最新的通讯录信息
+  	function getUserFromSever() {
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-directory', {
+  			data:{
+				since_id: memberId,
+				count:1
+			},
+			dataType:'json',
+			type:'get',
+			timeout:10000,
+			success:function(result){
+				if(result.succ) {
+					if(result.data.length > 0) {
+						db.transaction(function (tx) {
+							mui.each(result.data, function() {
+								var updateUserSQL = 'update or ignore user set '+
+								'email="'+this.email+'", department_id="'+this.department+'", name="'+this.name+'", cellphone="'+this.cellphone+'", office="'+this.office+'", short_phone="'+this.short+'", headimgurl="'+this.avatar+'" '+
+								'where id="'+this.user_id+'"';
+								console.log(updateUserSQL)
+								tx.executeSql(updateUserSQL, [], function() {
+								})
+							})
+						}, function() {console.log('插入user的整个事务执行失败')}, function() {
+							getMember(memberId);
+						})
+					}
+				}else {
+					mui.toast('获取数据失败');
+				}
+			},
+			error:function(xhr,type,errorThrown){
+				getMember(memberId);
+				mui.toast('user请检查网络');				 
+			}
+  		})
+  	}
   	
   	//获取详细信息
   	function getMember(mid) {
@@ -123,7 +166,7 @@
 				$('#memberDetial').html(html);
 				
 				//输出标签
-				var searchTagSQL = 'select * from tag where to_user = ?';
+				var searchTagSQL = 'select * from tag where to_user = ? order by id desc';
 				var tagHtml = '';
 				tx.executeSql(searchTagSQL, [result.rows.item(0).id], function(tx, result) {
 					for(var i=0; i<result.rows.length; i++) {
@@ -154,11 +197,13 @@
 			timeout: 10000,
 			success: function(result) {
 				if (result.succ) {
+					getTagFromSever();
 					$('#tagList').prepend('<button type="button" class="mui-btn mui-btn-success" info="from: '+from.name+'">'+content+
 					'<span class="mui-badge mui-badge-danger deletButtom" info="'+content+' from：'+from.name+'" tid="'+result.data.tid+'">x</span></button>')
 				} else{
 					mui.toast('添加失败');
 				}
+				
 			},
 			error: function(xhr,type,errorThrown) {
 					mui.toast('请检查网络');
@@ -178,16 +223,55 @@
 			timeout: 10000,
 			success: function(result) {
 				if (result.succ) {
+					getModifyDate()
 					tag.remove();
 				} else{
 					mui.toast('删除失败');
 				}
 			},
 			error: function(xhr,type,errorThrown) {
-					mui.toast('请检查网络');
+				mui.toast('请检查网络');
 			}
 		})
   	}
+  	
+  	//从服务器上更新最新的tag
+  	function getTagFromSever() {
+  		tagSId = plus.storage.getItem('tagsid') == null? 0:plus.storage.getItem('tagsid');
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-tags', {
+  			data:{
+				since_id:tagSId
+			},
+			dataType:'json',
+			type:'get',
+			timeout:10000,
+			success:function(result){
+				if(result.succ) {
+					console.log('最新Tags数量：'+result.data.length)
+					if (result.data.length > 0) {
+						plus.storage.setItem('tagsid', result.data[0].tid.toString());
+						db.transaction(function (tx) {
+							mui.each(result.data, function() {
+								var insertTagSQL = 'insert or ignore into tag '+
+								'(id, content, to_user, from_user, status) values'+
+								'('+this.tid+', "'+this.content+'", '+this.to+', '+this.from+','+this.status+')'
+								tx.executeSql(insertTagSQL, [], function() {
+									console.log('插入Tag成功')
+								})
+							})
+						}, function() {console.log('插入tag的整个事务执行失败')}, function() {
+						})
+					}	
+				}else {
+					mui.toast('获取数据失败');
+				}
+			},
+			error:function(xhr,type,errorThrown){
+				mui.toast('tag请检查网络');				 
+			}
+  		})
+  	}
+  	
   	
   	mui('#memberDetial').on('tap', 'button', function() {
   		var info = this.getAttribute('info')

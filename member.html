@@ -26,9 +26,6 @@
 <body>
 <div class="mui-content">
 	<div>
-		<div class="mui-indexed-list-search mui-input-row mui-search">
-			<input type="search" class="mui-input-clear mui-indexed-list-search-input" placeholder="搜索">
-		</div>
 		<div id="memberList">
 			<div class="title">
 				右侧无导航箭头
@@ -61,7 +58,8 @@
   		console.log('userSID:'+userSId)
   		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-directory', {
   			data:{
-				since_id: userSId
+				since_id: userSId,
+				count:0
 			},
 			dataType:'json',
 			type:'get',
@@ -90,7 +88,7 @@
 				}
 			},
 			error:function(xhr,type,errorThrown){
-				mui.toast('请检查网络');				 
+				mui.toast('user请检查网络');				 
 			}
   		})
   	}
@@ -134,7 +132,7 @@
 				}
 			},
 			error:function(xhr,type,errorThrown){
-				mui.toast('请检查网络');				 
+				mui.toast('department请检查网络');				 
 			}
   		})
   	}
@@ -177,7 +175,7 @@
 				}
 			},
 			error:function(xhr,type,errorThrown){
-				mui.toast('请检查网络');				 
+				mui.toast('tag请检查网络');				 
 			}
   		})
   	}
@@ -197,9 +195,6 @@
 				  				var html = '';
 				  				for(var i=0; i<result.rows.length; i++) {
 				  					html = '<li class="mui-table-view-cell memeberItem" rel="'+result.rows.item(i).id+'">'+
-												'<div class="mui-slider-right mui-disabled">'+
-													'<a class="addTag mui-btn mui-btn-green" rel="'+result.rows.item(i).id+'">贴标签</a>'+
-												'</div>'+
 												'<div>'+result.rows.item(i).name+'</div>'+
 											'</li>';
 				  					$('#department'+result.rows.item(i).department_id).append(html);
@@ -240,30 +235,13 @@
 		})
   	})
 	
-	mui(document).on('tap', '.addTag', function(event) {
-  		event.detail.gesture.preventDefault(); //修复iOS 8.x平台存在的bug，使用plus.nativeUI.prompt会造成输入法闪一下又没了
-  		var target = this;
-		var btnArray = ['确定', '取消'];
-		mui.prompt('from 黄培健 to 王宇航', '', '', btnArray, function(e) {
-			if (e.index == 0) {
-				mui.toast('添加成功');
-			} else {
-			}
-			setTimeout(function() {
-				mui.swipeoutClose(target);
-			}, 1);
-		})
-  	})
 	
-	var userSId = 0,
-		departmentSId = 0,
-		tagSId = 0;
+	
   	mui.plusReady(function(){
-  		
   		//初始化userSid和departmentSid
-  		userSId = plus.storage.getItem('usersid') == null? 0:userSId;
-  		departmentSId = plus.storage.getItem('departmentsid') == null? 0:departmentSId;
-  		tagSId = plus.storage.getItem('tagsid') == null? 0:tagSId;
+  		userSId = plus.storage.getItem('usersid') == null? 0:plus.storage.getItem('usersid') == null;
+  		departmentSId = plus.storage.getItem('departmentsid') == null? 0:plus.storage.getItem('departmentsid');
+  		tagSId = plus.storage.getItem('tagsid') == null? 0:plus.storage.getItem('tagsid');
   		
 		getUserFromSever();
   		getDepartmentFromSever();

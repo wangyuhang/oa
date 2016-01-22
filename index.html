@@ -32,6 +32,7 @@
 <script src="js/zepto.min.js"></script>
 <script src="js/mui.min.js"></script>
 <script src="js/init_db.js"></script>
+<script src="js/get_modify.js"></script>
 <script type="text/javascript" charset="utf-8">
 
 	//mui初始化
@@ -49,6 +50,7 @@
 	var title = document.getElementById("title");
 	 //选项卡点击事件
 	mui('.mui-bar-tab').on('tap', 'a', function(e) {
+		getModifyDate();
 		var targetTab = this.getAttribute('href');
 		if (targetTab == activeTab) {
 			return;
@@ -97,7 +99,6 @@
 			}
 			self.append(sub);
 		}
-		
 	});
 	
 	

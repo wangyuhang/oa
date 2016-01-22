@@ -47,7 +47,8 @@
   		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-notices', {
   			data:{
 				since_id: noticeSinceId,
-				user_id:1
+				user_id:1,
+				count:0
 			},
 			dataType:'json',
 			type:'get',
@@ -163,7 +164,7 @@
 								var updateSQL = '';
 								if(this.info == 'delete'){
 									console.log('delete from '+this.type+' where id = '+this.modifyId)
-									updateSQL = 'update or ignore '+this.type+' set '+this.info+' where id = '+this.modifyId;	
+									updateSQL = 'delete from '+this.type+' where id = '+this.modifyId;	
 								}else {
 									console.log('update or ignore '+this.type+' set '+this.info+' where id = '+this.modifyId)
 									var updateSQL = 'update or ignore '+this.type+' set '+this.info+' where id = '+this.modifyId;	
@@ -187,10 +188,9 @@
   		})
   	}
   	
-  	var noticeSinceId = 0;
   	mui.plusReady(function() {
   		//从缓存中读取noticeSinceId
-		noticeSinceId = plus.storage.getItem('noticesid') == null? 0:noticeSinceId;
+		noticeSinceId = plus.storage.getItem('noticesid') == null? 0:plus.storage.getItem('noticesid');
 
   		//从本地数据库中读取旧的数据
   		getNewNoticeFromDB(0,true);

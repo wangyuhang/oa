@@ -59,7 +59,7 @@
   	var fileType = ['mui-icon-paperclip', 'mui-icon-image', 'mui-icon-mic', 'mui-icon-videocam'];
   	mui.plusReady(function(){
   		noticeId = plus.webview.currentWebview().noticeId;
-  		getNotice(noticeId);
+  		getNoticeFromServer();
   	})
   	
   	//转化已读未读数据格式
@@ -90,7 +90,44 @@
 		}
   	}
   	
-  	function getNotice() {
+  	function getNoticeFromServer() {
+  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-notices', {
+  			data:{
+				since_id: noticeId,
+				user_id:1,
+				count:1
+			},
+			dataType:'json',
+			type:'get',
+			timeout:10000,
+			success:function(result){
+				if(result.succ) {
+					if(result.data.length > 0) {
+						db.transaction(function (tx) {
+							mui.each(result.data, function() {
+								var updateNoticeSQL = 'update or ignore notice set '+
+								'title="'+this.title+'", content="'+this.content+'", create_time="'+this.time+'", all_users="'+this.all_users+'", reply_users="'+this.reply_users+'", user_id="'+this.user_id+'", attachments="'+this.attachments+'" '+
+								'where id="'+this.id+'"';
+								tx.executeSql(updateNoticeSQL, [], function() {})
+							})
+						}, function() {console.log('更新notice事务执行失败')}, function() {
+							getNoticeFromDB();
+						})
+					}else {
+					}
+				}else {
+					mui.toast('获取数据失败');
+					getNoticeFromDB();
+				}
+			},
+			error:function(xhr,type,errorThrown){
+				mui.toast('请检查网络');
+				getNoticeFromDB();
+			}
+  		})
+  	}
+  	
+  	function getNoticeFromDB() {
   		db.transaction(function (tx) {
   			var searchSQL = 'select * from notice where id = '+noticeId
   			tx.executeSql(searchSQL, [], function(tx, result) {

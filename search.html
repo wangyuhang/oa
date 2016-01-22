@@ -22,48 +22,7 @@
 		</div>
 	</form>
 	<div id="searchResultList">
-		<div class="title">通知</div>
-		<ul id="noticeList" class="mui-table-view mui-table-view-striped mui-table-view-condensed">
-	        <li class="mui-table-view-cell" rel='1'>
-	            <div class="mui-table">
-	                <div class="mui-table-cell mui-col-xs-10">
-	                    <h4 class="mui-ellipsis-2">dsfadf</h4>
-	                    <h5>发送人：asdfadsf</h5>
-	                </div>
-	                <div class="mui-table-cell mui-col-xs-2 mui-text-right">
-	                    <span class="mui-h5">12:30</span>
-	                </div>
-	            </div>
-	        </li>
-	        <li class="mui-table-view-cell" rel='1'>
-	            <div class="mui-table">
-	                <div class="mui-table-cell mui-col-xs-10">
-	                    <h4 class="mui-ellipsis-2">dsfadf</h4>
-	                    <h5>发送人：asdfadsf</h5>
-	                </div>
-	                <div class="mui-table-cell mui-col-xs-2 mui-text-right">
-	                    <span class="mui-h5">12:30</span>
-	                </div>
-	            </div>
-	        </li>
-	        <li class="mui-table-view-cell" rel='1'>
-	            <div class="mui-table">
-	                <div class="mui-table-cell mui-col-xs-10">
-	                    <h4 class="mui-ellipsis-2">dsfadf</h4>
-	                    <h5>发送人：asdfadsf</h5>
-	                </div>
-	                <div class="mui-table-cell mui-col-xs-2 mui-text-right">
-	                    <span class="mui-h5">12:30</span>
-	                </div>
-	            </div>
-	        </li>
-	    </ul>
-	    <div class="title">联系人</div>
-	    <ul id="userList" class="mui-table-view">
-			 <li class="mui-table-view-cell">Item 1</li>
-	         <li class="mui-table-view-cell">Item 2</li>
-	         <li class="mui-table-view-cell">Item 3</li>
-		</ul>
+		
 	</div>
 	
 </div>
@@ -76,33 +35,88 @@
 <script src="js/format_data.js"></script>
 <script type="text/javascript" charset="utf-8">
   	mui.init();
-  	var searchResultList = $('#searchResultList');
+  	var searchResultList = $('#searchResultList'),
+  		searchInput = $('#searchInput');
   	function onSearch() {
   		searchResultList.html('');
-  		var searchValue = $.trim($('#searchInput').val());
-  		var searchNoticeSQL = 'select notice.id as nid, title, user_id, create_time, user.name as username from notice join user on notice.user_id = user.id where content like "%'+searchValue+'%"';
-  		var searchUserSQL = 'select id, name from user where id in (select to_user from tag where content like "%'+searchValue+'%")';
-  		db.transaction(function (tx) {
-  			tx.executeSql(searchNoticeSQL, [], function(tx, result) {
-  				if (result.rows.length > 0){
-  					var html = '';
-  					for(var i=0; i<result.rows.length; i++) {
-  						html+='<li class="mui-table-view-cell" rel="'+result.rows.item(i).id+'">'+
-						            '<div class="mui-table">'+
-						                '<div class="mui-table-cell mui-col-xs-10">'+
-						                    '<h4 class="mui-ellipsis-2">dsfadf</h4>'+
-						                    '<h5>发送人：'+result.rows.item(i).username+'</h5>'+
-						                '</div>'+
-						                '<div class="mui-table-cell mui-col-xs-2 mui-text-right">'+
-						                    '<span class="mui-h5">'+transformDateToSeveralType(result.rows.item(i).create_time)+'</span>'+
-						                '</div>'+
-						            '</div>'+
-						        '</li>'	
-  					}
-  					html = '<div class="title">通知</div><ul id="noticeList" class="mui-table-view mui-table-view-striped mui-table-view-condensed">'+html+'</ul>';
-  					searchResultList.html(html);
-  				}
-			})
-  		})
+  		var searchValue = $.trim(searchInput.val());
+  		if(searchValue != ''){
+	  		var searchNoticeSQL = 'select notice.id as nid, title, user_id, create_time, user.name as username from notice join user on notice.user_id = user.id where content like "%'+searchValue+'%" order by notice.id desc limit 3';
+	  		var searchUserSQL = 'select id, name from user where id in (select to_user from tag where content like "%'+searchValue+'%") or name like "%'+searchValue+'%"';
+	  		db.transaction(function (tx) {
+	  			tx.executeSql(searchNoticeSQL, [], function(tx, result) {
+	  				if (result.rows.length > 0){
+	  					var html = '';
+	  					for(var i=0; i<result.rows.length; i++) {
+	  						html+='<li class="mui-table-view-cell" rel="'+result.rows.item(i).nid+'">'+
+							            '<div class="mui-table">'+
+							                '<div class="mui-table-cell mui-col-xs-10">'+
+							                    '<h4 class="mui-ellipsis-2">dsfadf</h4>'+
+							                    '<h5>发送人：'+result.rows.item(i).username+'</h5>'+
+							                '</div>'+
+							                '<div class="mui-table-cell mui-col-xs-2 mui-text-right">'+
+							                    '<span class="mui-h5">'+transformDateToSeveralType(result.rows.item(i).create_time)+'</span>'+
+							                '</div>'+
+							            '</div>'+
+							        '</li>'	
+	  					}
+	  					html = '<div class="title">通知</div><ul id="noticeList" class="mui-table-view mui-table-view-striped mui-table-view-condensed">'+html+'</ul>';
+	  					searchResultList.append(html);
+	  				}
+				})
+	  			
+	  			tx.executeSql(searchUserSQL, [], function(tx, result) {
+	  				if (result.rows.length > 0){
+	  					var html = '';
+	  					for(var i=0; i<result.rows.length; i++) {
+	  						html+='<li class="mui-table-view-cell" rel="'+result.rows.item(i).id+'">'+result.rows.item(i).name+'</li>'	
+	  					}
+	  					html = '<div class="title">联系人</div><ul id="userList" class="mui-table-view">'+html+'</ul>';
+	  					searchResultList.append(html);
+	  				}
+				})
+	  		})
+	  	}
   	}
+  	
+//	mui(document).on('change', '#searchInput', function() {
+//		onSearch();
+//	})
+  	
+  	mui(document).on('tap', '#userList li', function() {
+  		console.log('12')
+  		var webview = mui.openWindow({
+		    url: 'member_detail.html',
+		    id: 'member_detail.html',
+		    styles:{
+		      top: '0px',//新页面顶部位置
+		      bottom: '0px'
+		    },
+		    extras:{
+		    		memberId: this.getAttribute('rel')
+		    },
+		    waiting:{
+		      autoShow:true,//自动显示等待框，默认为true
+		      title:'正在加载...'//等待对话框上显示的提示内容
+		    }				  
+		})
+  	})
+  	
+  	mui(document).on('tap', '#noticeList li', function() {
+  		var webview = mui.openWindow({
+		    url: 'notice_detail.html',
+		    id: 'notice_detail.html',
+		    styles:{
+		      top: '0px',//新页面顶部位置
+		      bottom: '0px'
+		    },
+		    extras:{
+		    		noticeId: this.getAttribute('rel')
+		    },
+		    waiting:{
+		      autoShow:true,//自动显示等待框，默认为true
+		      title:'正在加载...'//等待对话框上显示的提示内容
+		    }				  
+		})
+  	})
 </script>
