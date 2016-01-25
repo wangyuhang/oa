@@ -49,19 +49,20 @@
 	mui.init();
 	
 	function login() {
+		document.activeElement.blur();
 		var username = $.trim($('#account').val()),
 			password = $('#password').val(),
 			autoLogin = $('#autoLogin').hasClass('mui-active')? true: false;
 		if (username != '' && password !='') {
 			if (autoLogin) {
-				localStorage.setItem('username', username);
-				localStorage.setItem('password', password);
+				plus.storage.setItem('username', username);
+				plus.storage.setItem('password', password);
 			} else{
-				localStorage.removeItem('username');
-				localStorage.removeItem('password');
+				plus.storage.removeItem('username');
+				plus.storage.removeItem('password');
 			}
 			
-			mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/enter',{
+			mui.ajax('http://oa.tools.nbtv.cn/index.php?r=site/enter',{
 				data:{
 					username: username,
 					password: password
@@ -83,8 +84,8 @@
 						$.cookie('id',result.data.id);
 						$.cookie('name',result.data.name);
 						$.cookie('avatar',result.data.avatar);
-						localStorage.setItem('id',result.data.id.toString());
-						localStorage.setItem('name',result.data.name);
+						plus.storage.setItem('id',result.data.id.toString());
+						plus.storage.setItem('name',result.data.name);
 						mui.toast('登录成功');
 					}else {
 						mui.toast('登录失败');
@@ -106,8 +107,8 @@
 			login();
 		});
 		
-		var username = localStorage.getItem('username'),
-			password = localStorage.getItem('password');
+		var username = plus.storage.getItem('username'),
+			password = plus.storage.getItem('password');
 		if (username && password) {
 			$('#account').val(username);
 			$('#password').val(password);

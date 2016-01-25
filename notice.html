@@ -44,10 +44,10 @@
   	}
 	
   	function pulldownRefresh() {
-  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-notices', {
+  		mui.ajax('http://oa.tools.nbtv.cn/index.php?r=site/get-notices', {
   			data:{
 				since_id: noticeSinceId,
-				user_id:1,
+				user_id:userId,
 				count:0
 			},
 			dataType:'json',
@@ -76,7 +76,8 @@
 					}else {
 						
 					}
-					getModifyDate();
+					//修改notice内容都在进入详细页以后修改
+					//getModifyDate();
 				}else {
 					mui.toast('获取数据失败');
 				}
@@ -104,7 +105,7 @@
 						            '<div class="mui-table">'+
 						                '<div class="mui-table-cell mui-col-xs-10">'+
 						                    '<h4 class="mui-ellipsis-2">'+result.rows.item(i).title+'</h4>'+
-						                    '<h5>发送人：'+result.rows.item(i).name+'<span class="c-reply">'+formatReply(result.rows.item(i).reply_users,result.rows.item(i).all_users)+'</span></h5>'+
+						                    '<h5>发送人：'+result.rows.item(i).name+'</h5>'+
 						                '</div>'+
 						                '<div class="mui-table-cell mui-col-xs-2 mui-text-right">'+
 						                    '<span class="mui-h5">'+transformDateToSeveralType(result.rows.item(i).create_time)+'</span>'+
@@ -146,9 +147,9 @@
   	//获取修改的信息
   	function getModifyDate() {
   		var modifySinceId = plus.storage.getItem('modifySinceId');
-  		console.log('modifyId'+modifySinceId)
   		modifySinceId = modifySinceId == null? 0:modifySinceId;
-		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-updates', {
+  		console.log('modifyId'+modifySinceId)
+		mui.ajax('http://oa.tools.nbtv.cn/index.php?r=site/get-updates', {
   			data:{
 				since_id: modifySinceId
 			},
@@ -191,6 +192,8 @@
   	mui.plusReady(function() {
   		//从缓存中读取noticeSinceId
 		noticeSinceId = plus.storage.getItem('noticesid') == null? 0:plus.storage.getItem('noticesid');
+		userId = plus.storage.getItem('id');
+		console.log('userId:'+userId)
 
   		//从本地数据库中读取旧的数据
   		getNewNoticeFromDB(0,true);

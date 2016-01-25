@@ -38,6 +38,7 @@
   	var searchResultList = $('#searchResultList'),
   		searchInput = $('#searchInput');
   	function onSearch() {
+  		document.activeElement.blur();
   		searchResultList.html('');
   		var searchValue = $.trim(searchInput.val());
   		if(searchValue != ''){

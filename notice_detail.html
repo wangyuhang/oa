@@ -58,6 +58,7 @@
   	var noticeId = '';
   	var fileType = ['mui-icon-paperclip', 'mui-icon-image', 'mui-icon-mic', 'mui-icon-videocam'];
   	mui.plusReady(function(){
+  		userId = plus.storage.getItem('id')
   		noticeId = plus.webview.currentWebview().noticeId;
   		getNoticeFromServer();
   	})
@@ -85,16 +86,19 @@
   	
   	//检查自己是否已读
   	function checkedIfReaded(id, readedIdString) {
-		if(readedIdString.indexOf(id) > 0 ){
-		    $('#footer').remove();
+  		//alert(id+'in'+readedIdString+','+readedIdString.indexOf(id))
+  		if(readedIdString !=''){
+			if(readedIdString.indexOf(id) >= 0 ){
+			    $('#footer').remove();
+			}
 		}
   	}
   	
   	function getNoticeFromServer() {
-  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-notices', {
+  		mui.ajax('http://oa.tools.nbtv.cn/index.php?r=site/get-notices', {
   			data:{
 				since_id: noticeId,
-				user_id:1,
+				user_id:userId,
 				count:1
 			},
 			dataType:'json',
@@ -105,9 +109,10 @@
 					if(result.data.length > 0) {
 						db.transaction(function (tx) {
 							mui.each(result.data, function() {
-								var updateNoticeSQL = 'update or ignore notice set '+
-								'title="'+this.title+'", content="'+this.content+'", create_time="'+this.time+'", all_users="'+this.all_users+'", reply_users="'+this.reply_users+'", user_id="'+this.user_id+'", attachments="'+this.attachments+'" '+
-								'where id="'+this.id+'"';
+								var updateNoticeSQL = "update or ignore notice set "+
+								"title='"+this.title+"', content='"+this.content+"', create_time='"+this.time+"', all_users='"+this.all_users+"', reply_users='"+this.reply_users+"', user_id='"+this.user_id+"', attachments='"+this.attachments+"' "+
+								"where id='"+this.id+"'";
+								console.log(updateNoticeSQL)
 								tx.executeSql(updateNoticeSQL, [], function() {})
 							})
 						}, function() {console.log('更新notice事务执行失败')}, function() {
@@ -169,7 +174,7 @@
 						})
 					})
 				}
-				checkedIfReaded('1',result.rows.item(0).reply_users);
+				checkedIfReaded(userId,result.rows.item(0).reply_users);
 				$('#replayCtn').html(formatReply(result.rows.item(0).reply_users,result.rows.item(0).all_users));
 				$('#titleCtn').html(result.rows.item(0).title);
 				$('#timeCtn').html(transformDateToFullDate(result.rows.item(0).create_time));
@@ -179,10 +184,10 @@
   	}
   	
   	mui(document).on('tap', '#markReaded', function() {
-  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/reply', {
+  		mui.ajax('http://oa.tools.nbtv.cn/index.php?r=site/reply', {
   			data:{
 				noticeId: noticeId,
-				userId:1
+				userId:userId
 			},
 			dataType:'json',
 			type:'get',

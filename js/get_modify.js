@@ -3,7 +3,7 @@ function getModifyDate() {
 	var modifySinceId = plus.storage.getItem('modifySinceId');
 	console.log('modifyId'+modifySinceId)
 	modifySinceId = modifySinceId == null? 0:modifySinceId;
-	mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-updates', {
+	mui.ajax('http://oa.tools.nbtv.cn/index.php?r=site/get-updates', {
 		data:{
 			since_id: modifySinceId
 		},

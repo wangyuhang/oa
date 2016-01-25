@@ -71,7 +71,7 @@
   	
   	//从服务器上更新最新的通讯录信息
   	function getUserFromSever() {
-  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-directory', {
+  		mui.ajax('http://oa.tools.nbtv.cn/index.php?r=site/get-directory', {
   			data:{
 				since_id: memberId,
 				count:1
@@ -186,7 +186,7 @@
   	
   	//添加标签from{name,id}, to{name, id}, content
   	function addTag(from, to, content) {
-  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/add-tag', {
+  		mui.ajax('http://oa.tools.nbtv.cn/index.php?r=site/add-tag', {
 			data: {
 				from: from.id,
 				to: to.id,
@@ -213,7 +213,7 @@
   	
   	//添加标签from{name,id}, to{name, id}, content
   	function deletTag(tid, mid, tag) {
-  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/del-tag', {
+  		mui.ajax('http://oa.tools.nbtv.cn/index.php?r=site/del-tag', {
 			data: {
 				tid: tid,
 				id: mid
@@ -238,7 +238,7 @@
   	//从服务器上更新最新的tag
   	function getTagFromSever() {
   		tagSId = plus.storage.getItem('tagsid') == null? 0:plus.storage.getItem('tagsid');
-  		mui.ajax('http://192.168.200.215/directory/frontend/web/index.php?r=site/get-tags', {
+  		mui.ajax('http://oa.tools.nbtv.cn/index.php?r=site/get-tags', {
   			data:{
 				since_id:tagSId
 			},
@@ -281,14 +281,15 @@
   	//添加标签
   	mui('footer').on('tap', '#addTag', function(event) {
   		event.detail.gesture.preventDefault(); //修复iOS 8.x平台存在的bug，使用plus.nativeUI.prompt会造成输入法闪一下又没了
-  		var fromName = localStorage.getItem('name'),
-  			fromId = localStorage.getItem('id'),
+  		var fromName = plus.storage.getItem('name'),
+  			fromId = plus.storage.getItem('id'),
   			toId = $(this).attr('tagToId'),
   			toName = $(this).attr('tagToName');
+  		
 		var btnArray = ['确定', '取消'];
 		mui.prompt('from '+fromName+' to '+toName, '', '', btnArray, function(e) {
 			if (e.index == 0) {
-				var from = {'id': 0, 'name': 'demo1'},
+				var from = {'id': plus.storage.getItem('id'), 'name': plus.storage.getItem('username')},
 					to = {'id': toId, 'name': toName},
 					content = e.value;
 				if($.trim(content) != '') {
